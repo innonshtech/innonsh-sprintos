@@ -1,0 +1,78 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Activity, Zap, AlertTriangle, LayoutDashboard } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+interface KPIsProps {
+  activeProjects: number;
+  totalActiveTasks: number;
+  globalBlockers: number;
+  teamVelocity: number;
+}
+
+export default function DashboardKPIs({ activeProjects, totalActiveTasks, globalBlockers, teamVelocity }: KPIsProps) {
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <Card className="bg-card shadow-soft border-muted hover:border-indigo-500/30 transition-colors group">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Active Projects</CardTitle>
+            <div className="bg-indigo-500/10 p-2 rounded-md group-hover:bg-indigo-500/20 transition-colors">
+              <LayoutDashboard className="h-4 w-4 text-indigo-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeProjects}</div>
+            <p className="text-xs text-muted-foreground mt-1">Across all teams</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+        <Card className="bg-card shadow-soft border-muted hover:border-indigo-500/30 transition-colors group">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Total Active Tasks</CardTitle>
+            <div className="bg-indigo-500/10 p-2 rounded-md group-hover:bg-indigo-500/20 transition-colors">
+              <Zap className="h-4 w-4 text-indigo-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalActiveTasks}</div>
+            <p className="text-xs text-muted-foreground mt-1">In progress globally</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <Card className="bg-card shadow-soft border-red-500/20 hover:border-red-500/50 transition-colors group">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-red-500">Global Blockers</CardTitle>
+            <div className="bg-red-500/10 p-2 rounded-md group-hover:bg-red-500/20 transition-colors">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-500">{globalBlockers}</div>
+            <p className="text-xs text-red-500/70 mt-1">Requires immediate attention</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+        <Card className="bg-card shadow-soft border-muted hover:border-indigo-500/30 transition-colors group">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">Team Velocity</CardTitle>
+            <div className="bg-emerald-500/10 p-2 rounded-md group-hover:bg-emerald-500/20 transition-colors">
+              <Activity className="h-4 w-4 text-emerald-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{teamVelocity} pts</div>
+            <p className="text-xs text-emerald-500 mt-1 font-medium flex items-center">
+              <Activity className="w-3 h-3 mr-1" /> Trending upward
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}

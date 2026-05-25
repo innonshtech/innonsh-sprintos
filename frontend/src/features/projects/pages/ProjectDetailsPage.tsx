@@ -1,0 +1,138 @@
+import { useParams, Link } from 'react-router-dom';
+import { useProject } from '../api/projectApi';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Clock, Activity, CheckCircle2, LayoutDashboard, Target } from 'lucide-react';
+import { ProjectActionDropdown } from '../components/ProjectActionDropdown';
+import { useAuthStore } from '@/features/auth/store/authStore';
+
+export default function ProjectDetailsPage() {
+  const { id } = useParams();
+  const { data: project, isLoading } = useProject(id!);
+  const { user } = useAuthStore();
+
+  if (isLoading) return <div className="flex justify-center p-10">Loading project...</div>;
+  if (!project) return <div>Project not found.</div>;
+
+  const projectSprints = project.sprints || [];
+  const projectTasks = project.tasks || [];
+  
+  const completedTasks = projectTasks.filter(t => t.status === 'DONE').length;
+  const totalTasks = projectTasks.length;
+  const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link to="/dashboard/projects">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <Badge variant="outline" className="font-mono text-xs">{project.key}</Badge>
+              <Badge variant={project.status === 'ACTIVE' ? 'default' : 'secondary'} className={project.status === 'ACTIVE' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : ''}>
+                {project.status.replace('_', ' ')}
+              </Badge>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">{project.name}</h1>
+          </div>
+        </div>
+        
+        {user?.role === 'PRODUCT_MANAGER' && (
+          <ProjectActionDropdown project={project} />
+        )}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card className="bg-card shadow-soft border-muted md:col-span-3">
+          <CardHeader>
+            <CardTitle className="text-lg">Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-6">
+              {project.description || "No description provided."}
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-foreground">Project Completion</span>
+                <span className="font-bold text-indigo-500">{progress}%</span>
+              </div>
+              <div className="h-2 w-full bg-muted overflow-hidden rounded-full">
+                <div 
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-in-out" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-right">{completedTasks} of {totalTasks} tasks completed</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card className="bg-card shadow-soft border-muted">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
+                <Target className="w-4 h-4 mr-2" />
+                Active Sprints
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{projectSprints.filter(s => s.status === 'ACTIVE').length}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-card shadow-soft border-muted">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Total Tasks
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{totalTasks}</div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <h2 className="text-xl font-semibold mt-10 mb-4">Sprints</h2>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {projectSprints.map(sprint => (
+          <Link key={sprint.id} to={`/dashboard/sprints/${sprint.id}`} className="group outline-none">
+            <Card className="h-full bg-card shadow-soft hover:shadow-md transition-all duration-200 border-muted group-hover:border-indigo-500/30 group-focus-visible:ring-2 ring-indigo-500">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between mb-2">
+                  <Badge variant={sprint.status === 'ACTIVE' ? 'default' : 'secondary'} className={sprint.status === 'ACTIVE' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20' : ''}>
+                    {sprint.status}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground flex items-center">
+                    <Clock className="w-3 h-3 mr-1" />
+                    {new Date(sprint.endDate).toLocaleDateString()}
+                  </span>
+                </div>
+                <CardTitle className="text-lg group-hover:text-indigo-600 transition-colors">{sprint.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground line-clamp-2">{sprint.goal}</p>
+                <div className="flex items-center gap-2 mt-4 text-xs font-medium text-foreground">
+                  <Activity className="w-4 h-4 text-indigo-500" />
+                  View Sprint Dashboard
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+        {projectSprints.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center py-12 text-center bg-card rounded-lg border border-dashed border-border">
+            <LayoutDashboard className="w-8 h-8 text-muted-foreground mb-3" />
+            <h3 className="text-sm font-medium">No sprints yet</h3>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

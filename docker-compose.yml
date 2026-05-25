@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: innonsh-sprintos-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: sprintos_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sprintos_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/backend.Dockerfile
+    container_name: innonsh-sprintos-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/sprintos_db?schema=public
+      - JWT_SECRET=supersecretjwtkey_sprintos
+      - JWT_REFRESH_SECRET=supersecretrefreshjwtkey_sprintos
+      - PORT=5000
+    depends_on:
+      - db
+    networks:
+      - sprintos_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend.Dockerfile
+    container_name: innonsh-sprintos-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - sprintos_network
+
+volumes:
+  postgres_data:
+
+networks:
+  sprintos_network:
+    driver: bridge

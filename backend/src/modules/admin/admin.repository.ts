@@ -1,0 +1,144 @@
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+export class AdminRepository {
+  async getOverviewStats() {
+    const [
+      totalProjects,
+      activeSprints,
+      totalTasks,
+      completedTasks,
+      delayedTasks,
+      activeBlockers,
+      activeMembers,
+    ] = await Promise.all([
+      prisma.project.count(),
+      prisma.sprint.count({ where: { status: 'ACTIVE' } }),
+      prisma.task.count(),
+      prisma.task.count({ where: { status: 'DONE' } }),
+      prisma.task.count({
+        where: {
+          status: { not: 'DONE' },
+          dueDate: { lt: new Date() },
+        },
+      }),
+      prisma.blocker.count({ where: { isResolved: false } }),
+      prisma.user.count({ where: { isActive: true } }),
+    ]);
+
+    return {
+      totalProjects,
+      activeSprints,
+      totalTasks,
+      completedTasks,
+      delayedTasks,
+      activeBlockers,
+      activeMembers,
+    };
+  }
+
+  async getAllProjects() {
+    return prisma.project.findMany({
+      include: {
+        owner: true,
+        tasks: {
+          select: { status: true, dueDate: true }
+        },
+        sprints: {
+          where: { status: 'ACTIVE' },
+          take: 1,
+        },
+        _count: {
+          select: { tasks: true }
+        }
+      },
+    });
+  }
+
+  async getAllSprints() {
+    return prisma.sprint.findMany({
+      include: {
+        project: true,
+        tasks: {
+          select: { status: true }
+        },
+        standups: true,
+      },
+      orderBy: {
+        startDate: 'desc'
+      }
+    });
+  }
+
+  async getTeamPerformance() {
+    return prisma.user.findMany({
+      include: {
+        tasksAssigned: {
+          select: { status: true, dueDate: true }
+        },
+        blockersReported: {
+          where: { isResolved: false }
+        },
+        standups: {
+          where: {
+            date: { gte: new Date(new Date().setDate(new Date().getDate() - 7)) } // Last 7 days
+          }
+        }
+      }
+    });
+  }
+
+  async getWorkload() {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        avatar: true,
+        role: true,
+        _count: {
+          select: {
+            tasksAssigned: {
+              where: { status: { not: 'DONE' } }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  async getActiveBlockers() {
+    return prisma.blocker.findMany({
+      where: { isResolved: false },
+      include: {
+        task: {
+          include: { project: true, sprint: true }
+        },
+        reporter: true,
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+  }
+
+  async getAuditLogs(limit: number = 50) {
+    return prisma.auditLog.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  async getRecentActivities(limit: number = 50) {
+    return prisma.taskActivity.findMany({
+      include: {
+        task: true,
+        user: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+  }
+}
+
+export const adminRepository = new AdminRepository();

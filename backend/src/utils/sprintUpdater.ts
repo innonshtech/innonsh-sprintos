@@ -1,0 +1,28 @@
+import prisma from './prisma';
+
+export const autoUpdateSprintStatuses = async () => {
+  const now = new Date();
+  
+  try {
+    // 1. PLANNED -> ACTIVE (start date has arrived, and end date not passed)
+    await prisma.sprint.updateMany({
+      where: {
+        status: 'PLANNED',
+        startDate: { lte: now },
+        endDate: { gte: now }
+      },
+      data: { status: 'ACTIVE' }
+    });
+
+    // 2. ACTIVE or PLANNED -> COMPLETED (end date has passed)
+    await prisma.sprint.updateMany({
+      where: {
+        status: { in: ['PLANNED', 'ACTIVE'] },
+        endDate: { lt: now }
+      },
+      data: { status: 'COMPLETED' }
+    });
+  } catch (error) {
+    console.error('Error auto-updating sprint statuses:', error);
+  }
+};

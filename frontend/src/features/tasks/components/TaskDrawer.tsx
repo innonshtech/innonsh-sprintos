@@ -1,0 +1,379 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useTask, useUpdateTaskStatus, useAddSubtask, useUpdateSubtask } from '../api/taskApi';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { useToast } from '@/hooks/use-toast';
+import { TEAM_MEMBERS } from '@/constants/teamMembers';
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { 
+  MessageSquare, 
+  Paperclip, 
+  Activity, 
+  CheckCircle2, 
+  AlertTriangle,
+  Plus,
+  ListTodo
+} from 'lucide-react';
+import TaskComments from './TaskComments';
+import TaskActivityTimeline from './TaskActivityTimeline';
+
+interface TaskDrawerProps {
+  taskId: string | null;
+  onClose: () => void;
+}
+
+export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
+  const { data: task, isLoading } = useTask(taskId);
+  const updateTaskStatus = useUpdateTaskStatus();
+  const addSubtask = useAddSubtask();
+  const updateSubtask = useUpdateSubtask();
+  const { user } = useAuthStore();
+  const { toast } = useToast();
+  
+  const [newSubtask, setNewSubtask] = useState('');
+  const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'standups'>('comments');
+  
+  if (!taskId) return null;
+  if (isLoading) return <Sheet open={!!taskId} onOpenChange={(open) => !open && onClose()}><SheetContent><div className="p-10 text-center">Loading task details...</div></SheetContent></Sheet>;
+  if (!task) return null;
+
+  const project = task.project;
+  const sprint = task.sprint;
+  const assignee = TEAM_MEMBERS.find(m => m.id === task.assigneeId);
+  const reporter = TEAM_MEMBERS.find(m => m.id === task.creatorId);
+  const blocker = task.blockers?.find((b: any) => !b.isResolved);
+
+  const canEdit = user?.role === 'PRODUCT_MANAGER' || user?.id === task.assigneeId;
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    updateTaskStatus.mutate({ id: task.id, status: e.target.value });
+  };
+
+  const handleAddSubtask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSubtask.trim()) return;
+    addSubtask.mutate({ taskId, title: newSubtask }, {
+      onSuccess: () => setNewSubtask('')
+    });
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'CRITICAL': return 'bg-red-500/10 text-red-600 border-red-500/20';
+      case 'URGENT': return 'bg-amber-500/10 text-amber-600 border-amber-500/20';
+      case 'HIGH': return 'bg-orange-500/10 text-orange-600 border-orange-500/20';
+      case 'MEDIUM': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
+      case 'LOW': return 'bg-slate-500/10 text-slate-600 border-slate-500/20';
+      default: return '';
+    }
+  };
+
+  return (
+    <Sheet open={!!taskId} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent className="sm:max-w-xl md:max-w-3xl w-full overflow-y-auto p-0 border-l border-border bg-background shadow-2xl">
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="p-6 border-b border-border/50 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="hover:underline cursor-pointer">{project?.key}</span>
+                <span>/</span>
+                <span className="font-mono">{task.key}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                  {task.priority}
+                </Badge>
+              </div>
+            </div>
+            
+            <SheetTitle className="text-2xl font-bold leading-tight mb-4">
+              {task.title}
+            </SheetTitle>
+            
+            <div className="flex items-center gap-4">
+              {canEdit ? (
+                <select 
+                  className="text-sm border rounded-md px-3 py-1.5 bg-background font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
+                  value={task.status}
+                  onChange={handleStatusChange}
+                >
+                  <option value="TODO">TO DO</option>
+                  <option value="IN_PROGRESS">IN PROGRESS</option>
+                  <option value="IN_REVIEW">IN REVIEW</option>
+                  <option value="BLOCKED">BLOCKED</option>
+                  <option value="TESTING">TESTING</option>
+                  <option value="DONE">DONE</option>
+                </select>
+              ) : (
+                <Badge variant={task.status === 'DONE' ? 'default' : 'secondary'} className={task.status === 'DONE' ? 'bg-emerald-500' : ''}>
+                  {task.status.replace('_', ' ')}
+                </Badge>
+              )}
+              
+              {task.storyPoints && (
+                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-2 py-1.5 rounded-md border border-border">
+                  <Activity className="w-3.5 h-3.5 text-indigo-500" />
+                  {task.storyPoints} Points
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 p-6 flex flex-col md:flex-row gap-8">
+            <div className="flex-1 space-y-8 min-w-0">
+              
+              {/* Description */}
+              <section>
+                <h3 className="text-sm font-semibold text-foreground mb-3">Description</h3>
+                <div className="text-sm text-foreground/90 leading-relaxed p-4 bg-muted/20 rounded-lg border border-border/50 whitespace-pre-wrap">
+                  {task.description || <span className="text-muted-foreground italic">No description provided.</span>}
+                </div>
+              </section>
+
+              {/* Acceptance Criteria */}
+              {task.acceptanceCriteria && (
+                <section>
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Acceptance Criteria</h3>
+                  <div className="text-sm text-foreground/90 leading-relaxed p-4 bg-muted/20 rounded-lg border border-border/50 whitespace-pre-wrap">
+                    {task.acceptanceCriteria}
+                  </div>
+                </section>
+              )}
+
+              {/* Subtasks */}
+              <section>
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center">
+                  <ListTodo className="w-4 h-4 mr-2" /> Subtasks
+                </h3>
+                <div className="space-y-2">
+                  {task.subtasks?.map((st: any) => (
+                    <div key={st.id} className="flex items-center gap-3 p-2 hover:bg-muted/30 rounded-md group">
+                      <input 
+                        type="checkbox" 
+                        checked={st.isCompleted} 
+                        onChange={(e) => updateSubtask.mutate({ id: st.id, isCompleted: e.target.checked })}
+                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        disabled={!canEdit}
+                      />
+                      <span className={`text-sm flex-1 ${st.isCompleted ? 'line-through text-muted-foreground' : ''}`}>{st.title}</span>
+                    </div>
+                  ))}
+                  
+                  {canEdit && (
+                    <form onSubmit={handleAddSubtask} className="flex items-center gap-2 mt-2">
+                      <Input 
+                        placeholder="What needs to be done?" 
+                        value={newSubtask} 
+                        onChange={e => setNewSubtask(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Button type="submit" size="sm" variant="outline" className="h-8 px-2" disabled={!newSubtask.trim()}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </form>
+                  )}
+                </div>
+              </section>
+
+              {/* Blocker Alert */}
+              {blocker && (
+                <section>
+                  <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
+                      <div>
+                        <h4 className="text-sm font-semibold text-red-600 dark:text-red-400">Blocked: {blocker.type}</h4>
+                        <p className="text-sm text-red-600/80 dark:text-red-400/80 mt-1">{blocker.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Tabs for Comments / Activity / Standups */}
+              <section className="pt-4 border-t border-border/50">
+                <div className="flex border-b mb-4">
+                  <button 
+                    onClick={() => setActiveTab('comments')}
+                    className={`px-4 py-2 border-b-2 font-medium text-sm ${activeTab === 'comments' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Comments ({task.comments?.length || 0})
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('history')}
+                    className={`px-4 py-2 border-b-2 font-medium text-sm ${activeTab === 'history' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  >
+                    History
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('standups')}
+                    className={`px-4 py-2 border-b-2 font-medium text-sm ${activeTab === 'standups' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Standup Updates ({task.standups?.length || 0})
+                  </button>
+                </div>
+                
+                {activeTab === 'comments' && (
+                  <TaskComments taskId={task.id} comments={task.comments} />
+                )}
+                
+                {activeTab === 'history' && (
+                  <TaskActivityTimeline activities={task.activities} />
+                )}
+                
+                {activeTab === 'standups' && (
+                  <div className="space-y-4">
+                    {task.standups?.length === 0 && <div className="text-sm text-muted-foreground py-4">No standup updates linked to this task.</div>}
+                    {task.standups?.map((s: any) => (
+                      <div key={s.id} className="p-4 rounded-lg border border-border bg-muted/20">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Avatar className="w-6 h-6">
+                            <AvatarImage src={s.user?.avatar} />
+                            <AvatarFallback>{s.user?.name?.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{s.user?.name}</span>
+                          <span className="text-xs text-muted-foreground ml-auto">{new Date(s.date).toLocaleDateString()}</span>
+                        </div>
+                        <div className="text-sm space-y-2">
+                          <p><span className="font-semibold">Yesterday:</span> {s.yesterday}</p>
+                          <p><span className="font-semibold">Today:</span> {s.today}</p>
+                          {s.blockers && <p className="text-red-600"><span className="font-semibold">Blockers:</span> {s.blockers}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+
+            {/* Sidebar Details */}
+            <div className="w-full md:w-64 space-y-6 shrink-0">
+              <section className="p-4 rounded-lg border border-border/50 bg-card/50">
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Details</h4>
+                
+                <div className="space-y-5">
+                  <div>
+                    <span className="text-xs text-muted-foreground block mb-1.5">Assignee</span>
+                    <div className="flex items-center gap-2">
+                      {assignee ? (
+                        <>
+                          <Avatar className={`w-7 h-7 border-2 ${assignee.color ? `border-${assignee.color}-500` : 'border-border'}`}>
+                            <AvatarImage src={assignee.avatar} />
+                            <AvatarFallback className="text-[10px]">{assignee.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{assignee.name}</span>
+                        </>
+                      ) : (
+                        <span className="text-sm text-muted-foreground italic">Unassigned</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-xs text-muted-foreground block mb-1.5">Reporter</span>
+                    <div className="flex items-center gap-2">
+                      {reporter ? (
+                        <>
+                          <Avatar className="w-6 h-6 border border-border">
+                            <AvatarImage src={reporter.avatar} />
+                            <AvatarFallback className="text-[10px]">{reporter.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <span className="text-sm font-medium">{reporter.name}</span>
+                        </>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">System</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {sprint && (
+                    <div>
+                      <span className="text-xs text-muted-foreground block mb-1.5">Sprint</span>
+                      <Link to={`/dashboard/sprints/${sprint.id}`} className="text-sm font-medium text-indigo-500 hover:underline">
+                        {sprint.name}
+                      </Link>
+                    </div>
+                  )}
+
+                  {task.dueDate && (
+                    <div>
+                      <span className="text-xs text-muted-foreground block mb-1.5">Due Date</span>
+                      <span className="text-sm font-medium">{new Date(task.dueDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+
+                  {task.labels?.length > 0 && (
+                    <div>
+                      <span className="text-xs text-muted-foreground block mb-1.5">Labels</span>
+                      <div className="flex flex-wrap gap-1">
+                        {task.labels.map((l: string) => (
+                          <Badge key={l} variant="secondary" className="text-[10px]">{l}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-border/50">
+                    <span className="text-xs text-muted-foreground block mb-2">Actions</span>
+                    <div className="flex flex-col gap-2">
+                      {canEdit && task.status !== 'DONE' && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 border-emerald-500/20"
+                          onClick={() => {
+                            updateTaskStatus.mutate({ id: task.id, status: 'DONE' }, {
+                              onSuccess: () => {
+                                toast({
+                                  title: "Task Completed",
+                                  description: `${task.key} has been marked as done.`
+                                });
+                                onClose();
+                              }
+                            });
+                          }}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Mark as Done
+                        </Button>
+                      )}
+                      <Button variant="outline" size="sm" className="w-full justify-start">
+                        <Paperclip className="w-4 h-4 mr-2" />
+                        Attach File
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {task.attachments?.length > 0 && (
+                    <div className="pt-2 border-t border-border/50">
+                      <span className="text-xs text-muted-foreground block mb-2">Attachments</span>
+                      <div className="space-y-2">
+                        {task.attachments.map((att: any) => (
+                          <div key={att.id} className="flex items-center gap-2 text-sm p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
+                            <Paperclip className="w-4 h-4 text-muted-foreground" />
+                            <span className="truncate flex-1" title={att.fileName}>{att.fileName}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}

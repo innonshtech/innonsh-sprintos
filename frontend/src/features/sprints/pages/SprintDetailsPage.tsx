@@ -1,0 +1,166 @@
+import { useParams, Link } from 'react-router-dom';
+import { useSprint } from '../api/sprintApi';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Clock, BarChart3, AlertTriangle, LayoutDashboard, Target } from 'lucide-react';
+import { SprintActionDropdown } from '../components/SprintActionDropdown';
+import { useAuthStore } from '@/features/auth/store/authStore';
+
+export default function SprintDetailsPage() {
+  const { id } = useParams();
+  const { data: sprint, isLoading } = useSprint(id!);
+  const { user } = useAuthStore();
+
+  if (isLoading) return <div className="flex justify-center p-10">Loading sprint...</div>;
+  if (!sprint) return <div>Sprint not found.</div>;
+
+  const project = sprint.project;
+  const sprintTasks = sprint.tasks || [];
+  
+  const completedTasks = sprintTasks.filter(t => t.status === 'DONE').length;
+  const totalTasks = sprintTasks.length;
+  const progress = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+
+  const activeBlockersCount = sprintTasks.flatMap((t: any) => t.blockers || []).filter((b: any) => !b.isResolved).length;
+  
+  const totalStoryPoints = sprintTasks.reduce((acc: number, t: any) => acc + (t.storyPoints || 0), 0);
+  const completedStoryPoints = sprintTasks.filter((t: any) => t.status === 'DONE').reduce((acc: number, t: any) => acc + (t.storyPoints || 0), 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link to="/dashboard/sprints">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <Badge variant="outline" className="font-mono text-xs">{project?.key}</Badge>
+              <Badge variant={sprint.status === 'ACTIVE' ? 'default' : 'secondary'} className={sprint.status === 'ACTIVE' ? 'bg-indigo-500 text-white border-transparent' : ''}>
+                {sprint.status}
+              </Badge>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">{sprint.name}</h1>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link to="/dashboard/boards">
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-soft">
+              <LayoutDashboard className="w-4 h-4 mr-2" />
+              Go to Board
+            </Button>
+          </Link>
+          {user?.role === 'PRODUCT_MANAGER' && (
+            <SprintActionDropdown sprint={sprint} />
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card className="bg-card shadow-soft border-muted md:col-span-3">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center text-muted-foreground">
+              <Target className="w-4 h-4 mr-2 text-indigo-500" />
+              Sprint Goal
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg font-medium text-foreground mb-6">
+              {sprint.goal || "No goal defined."}
+            </p>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium text-foreground">Sprint Progress (Story Points)</span>
+                <span className="font-bold text-indigo-500">{completedStoryPoints} / {totalStoryPoints} pts</span>
+              </div>
+              <div className="h-2 w-full bg-muted overflow-hidden rounded-full">
+                <div 
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-in-out" 
+                  style={{ width: `${totalStoryPoints === 0 ? 0 : Math.round((completedStoryPoints / totalStoryPoints) * 100)}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground text-right">{progress}% of tasks completed</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card className="bg-card shadow-soft border-muted">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center text-muted-foreground">
+                <Clock className="w-4 h-4 mr-2" />
+                Time Remaining
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">
+                {Math.max(0, Math.ceil((new Date(sprint.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Ends {new Date(sprint.endDate).toLocaleDateString()}</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-card shadow-soft border-red-500/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center text-red-500">
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Active Blockers
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-500">{activeBlockersCount}</div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4">Sprint Tasks Overview</h2>
+        <div className="rounded-md border border-border bg-card">
+          <table className="w-full text-sm text-left">
+            <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+              <tr>
+                <th className="px-6 py-4 font-medium">Task</th>
+                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium text-center">Points</th>
+                <th className="px-6 py-4 font-medium text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sprintTasks.map(task => (
+                <tr key={task.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono text-[10px] text-muted-foreground">{task.key}</span>
+                      <span className="font-medium text-foreground">{task.title}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <Badge variant="outline" className="text-[10px]">
+                      {task.status.replace('_', ' ')}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-4 text-center font-mono">
+                    {task.storyPoints || '-'}
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Button variant="ghost" size="sm">Details</Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {sprintTasks.length === 0 && (
+             <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
+              No tasks in this sprint yet.
+             </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
