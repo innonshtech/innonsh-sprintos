@@ -123,20 +123,20 @@ export const SprintCalendar: React.FC = () => {
       {/* Filters & Detail Card */}
       <div className="lg:col-span-1 space-y-6">
         {/* Filters panel */}
-        <Card className="bg-zinc-950 border-zinc-800 text-white shadow-xl">
-          <CardHeader className="pb-3 border-b border-zinc-900">
+        <Card className="bg-card border-border shadow-sm">
+          <CardHeader className="pb-3 border-b border-border">
             <CardTitle className="text-sm font-bold flex items-center gap-2">
-              <CalendarIcon className="w-4 h-4 text-indigo-500" />
+              <CalendarIcon className="w-4 h-4 text-primary" />
               Calendar Settings
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-400 font-semibold">Show Sprints</span>
+              <span className="text-xs text-muted-foreground font-semibold">Show Sprints</span>
               <button
                 onClick={() => setShowSprints(!showSprints)}
                 className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                  showSprints ? 'bg-indigo-600' : 'bg-zinc-800'
+                  showSprints ? 'bg-primary' : 'bg-muted'
                 }`}
               >
                 <span
@@ -148,11 +148,11 @@ export const SprintCalendar: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-zinc-400 font-semibold">Show Tasks</span>
+              <span className="text-xs text-muted-foreground font-semibold">Show Tasks</span>
               <button
                 onClick={() => setShowTasks(!showTasks)}
                 className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                  showTasks ? 'bg-indigo-600' : 'bg-zinc-800'
+                  showTasks ? 'bg-primary' : 'bg-muted'
                 }`}
               >
                 <span
@@ -164,12 +164,12 @@ export const SprintCalendar: React.FC = () => {
             </div>
 
             {showTasks && (
-              <div className="flex items-center justify-between border-t border-zinc-900 pt-3">
-                <span className="text-xs text-zinc-400 font-semibold">Only My Tasks</span>
+              <div className="flex items-center justify-between border-t border-border pt-3">
+                <span className="text-xs text-muted-foreground font-semibold">Only My Tasks</span>
                 <button
                   onClick={() => setOnlyMyTasks(!onlyMyTasks)}
                   className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                    onlyMyTasks ? 'bg-indigo-600' : 'bg-zinc-800'
+                    onlyMyTasks ? 'bg-primary' : 'bg-muted'
                   }`}
                 >
                   <span
@@ -185,31 +185,31 @@ export const SprintCalendar: React.FC = () => {
 
         {/* Selected event details card */}
         {selectedEvent ? (
-          <Card className="bg-zinc-950 border-zinc-800 text-white shadow-xl animate-in fade-in duration-200">
-            <CardHeader className="pb-3 border-b border-zinc-900 flex flex-row items-center justify-between">
+          <Card className="bg-card border-border shadow-sm animate-in fade-in duration-200">
+            <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-bold">Schedule Details</CardTitle>
-              <button onClick={() => setSelectedEvent(null)} className="text-zinc-500 hover:text-white text-xs font-bold">
+              <button onClick={() => setSelectedEvent(null)} className="text-muted-foreground hover:text-foreground text-xs font-bold">
                 Clear
               </button>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
               <div>
-                <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Title</p>
-                <h4 className="text-sm font-bold text-zinc-200 leading-snug">{selectedEvent.title}</h4>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Title</p>
+                <h4 className="text-sm font-bold leading-snug">{selectedEvent.title}</h4>
               </div>
 
               {selectedEvent.type === 'sprint' && (
                 <>
                   <div>
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Status</p>
-                    <Badge variant={selectedEvent.status === 'ACTIVE' ? 'default' : 'secondary'} className={selectedEvent.status === 'ACTIVE' ? 'bg-indigo-600 text-white' : ''}>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                    <Badge variant={selectedEvent.status === 'ACTIVE' ? 'default' : 'secondary'} className={selectedEvent.status === 'ACTIVE' ? 'bg-primary text-primary-foreground' : ''}>
                       {selectedEvent.status}
                     </Badge>
                   </div>
                   {selectedEvent.goal && (
                     <div>
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Sprint Goal</p>
-                      <p className="text-xs text-zinc-400 leading-relaxed">{selectedEvent.goal}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Sprint Goal</p>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{selectedEvent.goal}</p>
                     </div>
                   )}
                 </>
@@ -219,14 +219,14 @@ export const SprintCalendar: React.FC = () => {
                 <>
                   <div className="flex gap-4">
                     <div>
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Status</p>
-                      <Badge variant="outline" className="border-zinc-800 text-zinc-300">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Status</p>
+                      <Badge variant="outline" className="text-muted-foreground">
                         {selectedEvent.status.replace('_', ' ')}
                       </Badge>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Priority</p>
-                      <Badge variant="outline" className="border-zinc-800 text-zinc-300">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Priority</p>
+                      <Badge variant="outline" className="text-muted-foreground">
                         {selectedEvent.priority}
                       </Badge>
                     </div>
@@ -234,23 +234,23 @@ export const SprintCalendar: React.FC = () => {
 
                   {selectedAssignee && (
                     <div>
-                      <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-1">Assignee</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Assignee</p>
                       <div className="flex items-center gap-2">
-                        <img src={selectedAssignee.avatar} alt={selectedAssignee.name} className="w-5 h-5 rounded-full border border-zinc-800" />
-                        <span className="text-xs text-zinc-300 font-semibold">{selectedAssignee.name}</span>
+                        <img src={selectedAssignee.avatar} alt={selectedAssignee.name} className="w-5 h-5 rounded-full border border-border" />
+                        <span className="text-xs text-muted-foreground font-semibold">{selectedAssignee.name}</span>
                       </div>
                     </div>
                   )}
 
                   {selectedEvent.isOverdue && (
-                    <div className="flex items-center gap-1.5 p-2 bg-red-950/20 border border-red-900/30 rounded-lg text-red-400 text-xs">
+                    <div className="flex items-center gap-1.5 p-2 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-xs">
                       <AlertCircle className="w-4 h-4 shrink-0" />
                       <span>This task is overdue!</span>
                     </div>
                   )}
 
                   <Button 
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg mt-2 shadow-md"
+                    className="w-full mt-2 shadow-md"
                     onClick={() => setDrawerTaskId(selectedEvent.id)}
                   >
                     Open Task Drawer
@@ -258,15 +258,15 @@ export const SprintCalendar: React.FC = () => {
                 </>
               )}
 
-              <div className="border-t border-zinc-900 pt-3 flex flex-col gap-1.5 text-xs text-zinc-400 font-medium">
+              <div className="border-t border-border pt-3 flex flex-col gap-1.5 text-xs text-muted-foreground font-medium">
                 {selectedProjectName && (
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                    <CheckCircle className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span>Project: {selectedProjectName}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                  <Clock className="w-3.5 h-3.5 text-primary shrink-0" />
                   <span>
                     {new Date(selectedEvent.start).toLocaleDateString()}
                     {selectedEvent.end && ` - ${new Date(selectedEvent.end).toLocaleDateString()}`}
@@ -276,7 +276,7 @@ export const SprintCalendar: React.FC = () => {
             </CardContent>
           </Card>
         ) : (
-          <Card className="bg-zinc-950/40 border border-zinc-900/60 text-zinc-500 text-center py-12 rounded-xl">
+          <Card className="bg-muted border-border text-muted-foreground text-center py-12 rounded-xl">
             <CalendarIcon className="w-8 h-8 mx-auto mb-2 opacity-30" />
             <p className="text-xs font-medium">Click any calendar event to inspect task priorities and deadlines.</p>
           </Card>
@@ -284,7 +284,7 @@ export const SprintCalendar: React.FC = () => {
       </div>
 
       {/* Main Calendar View */}
-      <div className="lg:col-span-3 bg-zinc-950 border border-zinc-800 rounded-2xl p-4 shadow-xl select-text">
+      <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-4 shadow-sm select-text calendar-container">
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin]}
           initialView="dayGridMonth"
