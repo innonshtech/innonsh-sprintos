@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Bell, Shield, User, Palette, Save, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { AuthApi } from '@/features/auth/authApi';
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
@@ -38,7 +39,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handlePasswordUpdate = () => {
+  const handlePasswordUpdate = async () => {
     if (newPassword !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -56,14 +57,22 @@ export default function SettingsPage() {
       return;
     }
     
-    // Simulate API Call
-    toast({
-      title: "Success",
-      description: "Your security credentials have been updated.",
-    });
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
+    try {
+      await AuthApi.changePassword(currentPassword, newPassword);
+      toast({
+        title: "Success",
+        description: "Your security credentials have been updated.",
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err.response?.data?.message || "Failed to update password.",
+      });
+    }
   };
 
   const handleSave = () => {

@@ -169,6 +169,40 @@ export class EmailService {
     console.log('Not implemented yet');
   }
 
+  async sendPasswordResetMail(email: string, token: string): Promise<boolean> {
+    const subject = `[ SprintOS ] Password Reset Request`;
+    try {
+      if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
+        console.warn('MAIL_USER or MAIL_PASS is missing. Mocking password reset email send.');
+        console.log(`Reset Token for ${email}: ${token}`);
+        return true;
+      }
+
+      const resetUrl = `http://localhost:5173/reset-password?token=${token}`;
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2>Reset Your Password</h2>
+          <p>You requested a password reset. Click the button below to reset your password:</p>
+          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4f46e5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0;">Reset Password</a>
+          <p>If you didn't request this, you can safely ignore this email. The link will expire in 1 hour.</p>
+        </div>
+      `;
+
+      await transporter.sendMail({
+        from: MAIL_FROM,
+        to: email,
+        subject,
+        html,
+      });
+
+      console.log(`Password reset mail sent to ${email}`);
+      return true;
+    } catch (error: any) {
+      console.error('Password reset mail failed:', error.message);
+      return false;
+    }
+  }
+
   async sendSprintStartedMail() {
     console.log('Not implemented yet');
   }

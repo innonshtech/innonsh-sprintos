@@ -597,6 +597,16 @@ model LoginHistory {
   loggedOutAt   DateTime?
 }
 
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
 model InAppNotification {
   id          String   @id @default(uuid())
   userId      String

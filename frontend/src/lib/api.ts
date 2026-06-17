@@ -54,7 +54,7 @@ api.interceptors.response.use(
         const { useAuthStore } = await import('../features/auth/store/authStore');
         useAuthStore.getState().logout();
         
-        const publicPaths = ['/', '/signin', '/signup'];
+        const publicPaths = ['/', '/signin', '/signup', '/forgot-password', '/reset-password'];
         if (!publicPaths.includes(window.location.pathname)) {
           window.location.href = '/signin';
         }

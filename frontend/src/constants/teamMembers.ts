@@ -92,15 +92,16 @@ export const TEAM_MEMBERS: TeamMember[] = [
   },
   // MARKETING TEAM
   {
-    id: "71190e96-d27c-4f49-9f7e-604174d43cd3",
-    name: "Yukta",
-    email: "yukta.innonsh@gmail.com",
-    password: "yukta123",
+    id: "uuid-4",
+    name: "Tasmiya Shaikh",
+    email: "tasmiya.shaikh@innonsh.com",
+    password: "tasmiya123",
     role: "MARKETING",
     department: "Marketing",
-    status: "ONLINE",
-    avatar: "https://i.pravatar.cc/150?u=yukta",
-    color: "pink",
+    avatar: "https://i.pravatar.cc/150?u=tasmiya",
+    status: "online",
+    assignedTasks: 4,
+    completedSprintTasks: 10
   },
   {
     id: "3a8db40b-6c7f-4ac3-bd5f-198fea06b880",
@@ -109,19 +110,9 @@ export const TEAM_MEMBERS: TeamMember[] = [
     password: "reshma123",
     role: "MARKETING",
     department: "Marketing",
-    status: "ONLINE",
     avatar: "https://i.pravatar.cc/150?u=reshma",
-    color: "violet",
-  },
-  {
-    id: "5e6f6e80-5284-4cc2-b71e-dedb7526ba1e",
-    name: "Naisha",
-    email: "naisha.innonsh@gmail.com",
-    password: "naisha123",
-    role: "MARKETING",
-    department: "Marketing",
-    status: "ONLINE",
-    avatar: "https://i.pravatar.cc/150?u=naisha",
-    color: "yellow",
+    status: "offline",
+    assignedTasks: 2,
+    completedSprintTasks: 5
   }
 ];

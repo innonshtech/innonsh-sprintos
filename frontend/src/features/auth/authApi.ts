@@ -35,4 +35,19 @@ export class AuthApi {
     const response = await api.delete('/security/logout-all');
     return response.data;
   }
+
+  static async forgotPassword(email: string) {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  }
+
+  static async resetPassword(token: string, newPassword: string) {
+    const response = await api.post('/auth/reset-password', { token, newPassword });
+    return response.data;
+  }
+
+  static async changePassword(oldPassword: string, newPassword: string) {
+    const response = await api.post('/auth/change-password', { oldPassword, newPassword });
+    return response.data;
+  }
 }

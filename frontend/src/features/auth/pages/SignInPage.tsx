@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Code2, Target, Users, Zap, Briefcase, ChevronRight, Activity, LayoutDashboard, Shield } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
@@ -267,7 +267,14 @@ export default function SignInPage() {
 
               {/* Password Field */}
               <div className="space-y-2 pt-2">
-                <Label htmlFor="password">Security Key (Password)</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Security Key (Password)</Label>
+                  {selectedEmail && (
+                    <Link to={`/forgot-password?email=${encodeURIComponent(selectedEmail)}`} className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                      Forgot Password?
+                    </Link>
+                  )}
+                </div>
                 <Input
                   id="password"
                   type="password"
