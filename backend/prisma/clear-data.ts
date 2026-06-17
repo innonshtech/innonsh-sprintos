@@ -3,78 +3,48 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Starting data cleanup (keeping user login credentials)...');
+  console.log('Starting data cleanup...');
+  
+  await prisma.pinnedMessage.deleteMany({});
+  await prisma.chatMember.deleteMany({});
+  await prisma.messageReaction.deleteMany({});
+  await prisma.chatMessage.deleteMany({});
+  await prisma.chatChannel.deleteMany({});
+  
+  await prisma.inAppNotification.deleteMany({});
+  await prisma.passwordResetToken.deleteMany({});
+  await prisma.loginHistory.deleteMany({});
+  await prisma.securityAuditLog.deleteMany({});
+  
+  await prisma.activityLog.deleteMany({});
+  await prisma.emailLog.deleteMany({});
+  await prisma.productivitySnapshot.deleteMany({});
+  await prisma.todayFocus.deleteMany({});
+  await prisma.memberSprintStats.deleteMany({});
+  
+  await prisma.auditLog.deleteMany({});
+  await prisma.attachment.deleteMany({});
+  await prisma.notification.deleteMany({});
+  
+  await prisma.retrospectiveComparison.deleteMany({});
+  await prisma.teamPerformanceMetric.deleteMany({});
+  await prisma.sprintReport.deleteMany({});
+  await prisma.feedback.deleteMany({});
+  await prisma.blocker.deleteMany({});
+  await prisma.dailyStandup.deleteMany({});
+  
+  await prisma.taskActivity.deleteMany({});
+  await prisma.taskSubtask.deleteMany({});
+  await prisma.commentReaction.deleteMany({});
+  await prisma.comment.deleteMany({});
+  
+  await prisma.task.deleteMany({});
+  await prisma.sprintMember.deleteMany({});
+  await prisma.sprint.deleteMany({});
+  await prisma.projectMember.deleteMany({});
+  await prisma.project.deleteMany({});
 
-  // 1. Clear self-referential foreign keys first to prevent constraint issues
-  console.log('Clearing self-referential relations (comments & chat messages)...');
-  try {
-    await prisma.comment.updateMany({
-      data: { parentCommentId: null }
-    });
-    console.log('✓ Cleared comment parent-child references.');
-  } catch (error) {
-    console.warn('Note: Could not clear comment parent-child references:', error);
-  }
-
-  try {
-    await prisma.chatMessage.updateMany({
-      data: { parentMessageId: null }
-    });
-    console.log('✓ Cleared chat message parent-child references.');
-  } catch (error) {
-    console.warn('Note: Could not clear chat message parent-child references:', error);
-  }
-
-  // 2. Delete from child/dependent tables up to parent tables
-  const tables = [
-    'pinnedMessage',
-    'messageReaction',
-    'chatMessage',
-    'chatMember',
-    'chatChannel',
-    'inAppNotification',
-    'loginHistory',
-    'securityAuditLog',
-    'userSession',
-    'notificationHistory',
-    'activityLog',
-    'emailLog',
-    'productivitySnapshot',
-    'todayFocus',
-    'memberSprintStats',
-    'auditLog',
-    'attachment',
-    'notification',
-    'retrospectiveComparison',
-    'analyticsSnapshot',
-    'teamPerformanceMetric',
-    'sprintReport',
-    'feedback',
-    'blocker',
-    'dailyStandup',
-    'taskActivity',
-    'taskSubtask',
-    'commentReaction',
-    'comment',
-    'task',
-    'sprintMember',
-    'sprint',
-    'projectMember',
-    'project'
-  ];
-
-  for (const table of tables) {
-    try {
-      console.log(`Clearing table ${table}...`);
-      // @ts-ignore
-      await prisma[table].deleteMany({});
-      console.log(`✓ Cleared table ${table}`);
-    } catch (error) {
-      console.error(`✗ Error clearing ${table}:`, error);
-    }
-  }
-
-  console.log('Data cleanup completed successfully!');
+  console.log('Successfully cleared all mock projects, sprints, tasks, and related data.');
 }
 
 main()

@@ -34,69 +34,7 @@ async function main() {
     });
     createdUsers[u.name] = user;
   }
-  
-  const saket = createdUsers["Saket"];
-  const lokeek = createdUsers["Lokeek"];
-  const chetana = createdUsers["Chetana"];
-
-  // 2. Seed Projects
-  const projectsData = [
-    { key: "SPS", name: "Smart Parking System", description: "IoT based smart parking management.", status: ProjectStatus.ACTIVE, ownerId: saket.id },
-    { key: "HRMS", name: "HRMS", description: "Internal HR management system.", status: ProjectStatus.ACTIVE, ownerId: saket.id },
-    { key: "ERP", name: "ERP Dashboard", description: "Enterprise resource planning portal.", status: ProjectStatus.PLANNING, ownerId: saket.id },
-    { key: "CP", name: "Client Portal", description: "External client facing portal.", status: ProjectStatus.ON_HOLD, ownerId: saket.id }
-  ];
-
-  const createdProjects: Record<string, any> = {};
-  for (const p of projectsData) {
-    const proj = await prisma.project.upsert({
-      where: { key: p.key },
-      update: p,
-      create: p,
-    });
-    createdProjects[p.key] = proj;
-  }
-
-  // Assign members to SPS project
-  await prisma.projectMember.createMany({
-    data: [
-      { projectId: createdProjects["SPS"].id, userId: saket.id, role: "LEAD" },
-      { projectId: createdProjects["SPS"].id, userId: lokeek.id, role: "MEMBER" },
-      { projectId: createdProjects["SPS"].id, userId: chetana.id, role: "MEMBER" },
-    ],
-    skipDuplicates: true
-  });
-
-  // 3. Seed Sprints for SPS
-  const sprint1 = await prisma.sprint.create({
-    data: {
-      name: "SPS Sprint 1",
-      goal: "Setup basic infrastructure and authentication",
-      startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      status: SprintStatus.ACTIVE,
-      projectId: createdProjects["SPS"].id,
-    }
-  });
-
-  // 4. Seed Tasks
-  const tasks = [
-    { key: "SPS-1", title: "Setup PostgreSQL Database", description: "Initialize Prisma and setup schemas", type: "TASK", status: TaskStatus.DONE, priority: TaskPriority.HIGH, storyPoints: 3, projectId: createdProjects["SPS"].id, sprintId: sprint1.id, assigneeId: lokeek.id, creatorId: saket.id },
-    { key: "SPS-2", title: "Build Auth Login Page", description: "Create SignInPage.tsx with role selection", type: "STORY", status: TaskStatus.IN_REVIEW, priority: TaskPriority.MEDIUM, storyPoints: 5, projectId: createdProjects["SPS"].id, sprintId: sprint1.id, assigneeId: chetana.id, creatorId: saket.id },
-    { key: "SPS-3", title: "Configure Zustand Stores", description: "Setup state management for tasks and sprints", type: "TASK", status: TaskStatus.IN_PROGRESS, priority: TaskPriority.HIGH, storyPoints: 5, projectId: createdProjects["SPS"].id, sprintId: sprint1.id, assigneeId: lokeek.id, creatorId: saket.id },
-    { key: "SPS-4", title: "DND Kit Kanban Board", description: "Implement drag and drop for tasks", type: "STORY", status: TaskStatus.TODO, priority: TaskPriority.URGENT, storyPoints: 8, projectId: createdProjects["SPS"].id, sprintId: sprint1.id, assigneeId: lokeek.id, creatorId: saket.id },
-    { key: "SPS-5", title: "Fix API CORS Issue", description: "CORS blocking frontend requests", type: "BUG", status: TaskStatus.TODO, priority: TaskPriority.CRITICAL, storyPoints: 2, projectId: createdProjects["SPS"].id, sprintId: sprint1.id, assigneeId: chetana.id, creatorId: saket.id },
-  ];
-
-  for (const t of tasks) {
-    await prisma.task.upsert({
-      where: { key: t.key },
-      update: t,
-      create: t,
-    });
-  }
-
-  console.log('Seed completed successfully!');
+  console.log('Seed completed successfully! Mock projects and tasks have been removed.');
 }
 
 main()
