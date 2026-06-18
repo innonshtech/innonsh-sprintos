@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { TEAM_MEMBERS } from '@/constants/teamMembers';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { useTeam } from '@/features/team/api/teamApi';
 
 interface CreateTaskModalProps {
   open: boolean;
@@ -26,6 +26,7 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
   const createTask = useCreateTask();
   const { toast } = useToast();
   const { data: projects = [] } = useProjects();
+  const { data: teamMembers = [] } = useTeam();
   
   const [projectId, setProjectId] = useState(defaultProjectId || '');
   const { data: sprints = [] } = useSprints(projectId);
@@ -197,7 +198,7 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Unassigned</SelectItem>
-                {TEAM_MEMBERS.map((m: any) => (
+                {teamMembers.map((m: any) => (
                   <SelectItem key={m.id} value={m.id}>{m.name} ({m.role})</SelectItem>
                 ))}
               </SelectContent>

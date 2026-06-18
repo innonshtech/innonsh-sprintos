@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCreateProject } from '../api/projectApi';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/features/auth/store/authStore';
-import { TEAM_MEMBERS } from '@/constants/teamMembers';
+import { useTeam } from '@/features/team/api/teamApi';
 
 interface CreateProjectModalProps {
   open: boolean;
@@ -18,13 +18,20 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
   const { user } = useAuthStore();
   const createProject = useCreateProject();
   const { toast } = useToast();
+  const { data: teamMembers = [], isLoading: isLoadingTeam } = useTeam();
   
   const [key, setKey] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState<string[]>(user ? [user.id] : []);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (user && selectedMembers.length === 0) {
+      setSelectedMembers([user.id]);
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,15 +101,21 @@ export function CreateProjectModal({ open, onOpenChange }: CreateProjectModalPro
           <div className="space-y-2">
             <Label>Team Members</Label>
             <div className="flex flex-wrap gap-2 p-3 border rounded-md max-h-[150px] overflow-y-auto">
-              {TEAM_MEMBERS.map(member => (
-                <div 
-                  key={member.id} 
-                  onClick={() => toggleMember(member.id)}
-                  className={`cursor-pointer px-3 py-1 text-sm rounded-full border ${selectedMembers.includes(member.id) ? 'bg-indigo-100 border-indigo-500 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-500 dark:text-indigo-300' : 'bg-background hover:bg-muted'}`}
-                >
-                  {member.name}
-                </div>
-              ))}
+              {isLoadingTeam ? (
+                <div className="text-sm text-muted-foreground">Loading team...</div>
+              ) : teamMembers.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No team members found</div>
+              ) : (
+                teamMembers.map((member: any) => (
+                  <div 
+                    key={member.id} 
+                    onClick={() => toggleMember(member.id)}
+                    className={`cursor-pointer px-3 py-1 text-sm rounded-full border ${selectedMembers.includes(member.id) ? 'bg-indigo-100 border-indigo-500 text-indigo-700 dark:bg-indigo-900/30 dark:border-indigo-500 dark:text-indigo-300' : 'bg-background hover:bg-muted'}`}
+                  >
+                    {member.name}
+                  </div>
+                ))
+              )}
             </div>
           </div>
           <DialogFooter>
