@@ -1,15 +1,11 @@
 import { Router, Request, Response } from 'express';
-import axios from 'axios';
 
 const router = Router();
 
 router.get('/remind-timesheets', async (req: Request, res: Response) => {
   try {
-    // 1. Verify Vercel Cron Secret
-    // Vercel sends the Authorization header like: `Bearer <CRON_SECRET>`
     const authHeader = req.headers.authorization;
     
-    // Check if CRON_SECRET is configured (important for production security)
     if (process.env.NODE_ENV === 'production' && !process.env.CRON_SECRET) {
       console.error('CRON_SECRET is not defined in environment variables.');
       return res.status(500).json({ error: 'Configuration Error' });
@@ -32,7 +28,15 @@ router.get('/remind-timesheets', async (req: Request, res: Response) => {
       text: "Hey team, it's 5:45 PM! Don't forget to submit your timesheet before logging off: https://sprintos.innonsh.com/signin"
     };
 
-    await axios.post(slackWebhookUrl, message);
+    const response = await fetch(slackWebhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Slack API responded with ${response.status}`);
+    }
 
     console.log('CRON: Slack timesheet reminder sent successfully.');
     res.status(200).json({ success: true, message: 'Reminder sent' });
