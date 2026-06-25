@@ -32,16 +32,16 @@ export const ThreadPanel: React.FC<ThreadPanelProps> = ({ onConvertTask }) => {
   if (!activeThreadMessage) return null;
 
   return (
-    <div className="w-80 border-l border-zinc-800 bg-zinc-950 flex flex-col h-full overflow-hidden animate-in slide-in-from-right duration-200">
+    <div className="w-80 border-l border-zinc-200 bg-white flex flex-col h-full overflow-hidden animate-in slide-in-from-right duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-zinc-800">
-        <div className="flex items-center gap-2 font-bold text-sm text-white">
+      <div className="flex items-center justify-between p-4 border-b border-zinc-200">
+        <div className="flex items-center gap-2 font-bold text-[15px] text-zinc-900">
           <MessageSquare className="w-4 h-4 text-indigo-500" />
           <span>Thread Discussion</span>
         </div>
         <button
           onClick={() => setActiveThreadMessage(null)}
-          className="text-zinc-500 hover:text-zinc-300 transition-colors p-1 rounded hover:bg-zinc-800 focus:outline-none"
+          className="text-zinc-500 hover:text-zinc-900 transition-colors p-1 rounded hover:bg-zinc-100 focus:outline-none"
         >
           <X className="w-4 h-4" />
         </button>
@@ -50,31 +50,31 @@ export const ThreadPanel: React.FC<ThreadPanelProps> = ({ onConvertTask }) => {
       {/* Thread messages list */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin" ref={scrollRef}>
         {/* Root Message Bubble (simplified) */}
-        <div className="p-3 bg-zinc-900/40 border border-zinc-850 rounded-xl mb-4">
+        <div className="p-3 bg-zinc-50 border border-zinc-200 rounded-xl mb-4">
           <div className="flex items-start gap-2.5">
             <Avatar className="w-7 h-7">
               <AvatarImage src={activeThreadMessage.sender?.avatar} alt={activeThreadMessage.sender?.name} />
-              <AvatarFallback className="text-[9px] font-bold bg-zinc-800 text-zinc-400">
+              <AvatarFallback className="text-xs font-bold bg-zinc-200 text-zinc-600">
                 {activeThreadMessage.sender?.name?.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-xs text-white truncate">
+                <span className="font-bold text-[13px] text-zinc-900 truncate">
                   {activeThreadMessage.sender?.name}
                 </span>
-                <span className="text-[8px] text-zinc-500">
+                <span className="text-[10px] text-zinc-500">
                   {formatDistanceToNow(new Date(activeThreadMessage.createdAt), { addSuffix: true })}
                 </span>
               </div>
-              <p className="text-xs text-zinc-350 mt-1 leading-relaxed break-words whitespace-pre-wrap">
+              <p className="text-[13px] text-zinc-700 mt-1 leading-relaxed break-words whitespace-pre-wrap">
                 {activeThreadMessage.content}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="text-[10px] uppercase font-bold text-zinc-500 px-1 border-b border-zinc-900 pb-2 mb-4 tracking-wider">
+        <div className="text-xs uppercase font-bold text-zinc-500 px-1 border-b border-zinc-200 pb-2 mb-4 tracking-wider">
           Replies ({replies.length})
         </div>
 
@@ -97,7 +97,7 @@ export const ThreadPanel: React.FC<ThreadPanelProps> = ({ onConvertTask }) => {
       </div>
 
       {/* Thread reply editor */}
-      <div className="p-3 border-t border-zinc-800">
+      <div className="p-3 border-t border-zinc-200">
         <MessageEditor
           onSend={handleSendReply}
           placeholder="Reply in thread..."

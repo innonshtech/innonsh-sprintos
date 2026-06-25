@@ -70,7 +70,7 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({ onSend, placeholde
   };
 
   return (
-    <div className="relative border border-zinc-800 bg-zinc-950 rounded-xl p-2 focus-within:border-indigo-600 transition-colors">
+    <div className="relative border border-zinc-200 bg-white shadow-sm rounded-xl p-2 focus-within:border-indigo-600 transition-colors">
       {/* Mentions Autocomplete dropdown */}
       <MentionAutocomplete
         suggestions={suggestions}
@@ -85,10 +85,10 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({ onSend, placeholde
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full bg-transparent text-sm text-white placeholder-zinc-500 border-none focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[160px] px-2 py-1.5 scrollbar-thin"
+        className="w-full bg-transparent text-[15px] text-zinc-900 placeholder-zinc-500 border-none focus:outline-none focus:ring-0 resize-none min-h-[40px] max-h-[160px] px-2 py-1.5 scrollbar-thin"
       />
 
-      <div className="flex items-center justify-between border-t border-zinc-900/60 pt-2 px-1">
+      <div className="flex items-center justify-between border-t border-zinc-200 pt-2 px-1">
         {/* Formatting or attachments trigger */}
         <div className="flex items-center gap-1">
           <EmojiPicker onEmojiSelect={handleEmojiSelect} />
@@ -98,7 +98,7 @@ export const MessageEditor: React.FC<MessageEditorProps> = ({ onSend, placeholde
         <button
           onClick={handleSubmit}
           disabled={!content.trim()}
-          className="flex items-center justify-center p-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-zinc-800 disabled:text-zinc-500 transition-colors focus:outline-none"
+          className="flex items-center justify-center p-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-zinc-100 disabled:text-zinc-400 transition-colors focus:outline-none"
         >
           <Send className="w-4 h-4" />
         </button>

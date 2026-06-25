@@ -144,10 +144,10 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
 
   if (isSystem) {
     return (
-      <div className="flex items-center justify-center gap-2 py-2 text-xs text-zinc-500 font-semibold">
-        <span className="w-8 h-px bg-zinc-800" />
+      <div className="flex items-center justify-center gap-2 py-2 text-[13px] text-zinc-500 font-semibold">
+        <span className="w-8 h-px bg-zinc-200" />
         <span>{message.content}</span>
-        <span className="w-8 h-px bg-zinc-800" />
+        <span className="w-8 h-px bg-zinc-200" />
       </div>
     );
   }
@@ -158,12 +158,12 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
     <div className={`group flex items-start gap-3 p-3 rounded-xl transition-all relative ${
       isPinned 
       ? 'bg-amber-500/5 border border-amber-500/10' 
-      : 'hover:bg-zinc-900/30 border border-transparent'
+      : 'hover:bg-zinc-50 border border-transparent'
     }`}>
       {/* Avatar */}
       <Avatar className="w-9 h-9">
         <AvatarImage src={message.sender?.avatar} alt={message.sender?.name} />
-        <AvatarFallback className="text-[10px] font-bold bg-zinc-800 text-zinc-400">
+        <AvatarFallback className="text-xs font-bold bg-zinc-200 text-zinc-600">
           {message.sender?.name?.substring(0, 2).toUpperCase()}
         </AvatarFallback>
       </Avatar>
@@ -171,19 +171,19 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
       {/* Message content panel */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-xs text-white leading-tight">
+          <span className="font-bold text-[13px] text-zinc-900 leading-tight">
             {message.sender?.name}
           </span>
-          <span className="text-[9px] text-zinc-500 font-medium leading-none">
+          <span className="text-xs text-zinc-500 font-medium leading-none">
             {format(new Date(message.createdAt), 'h:mm a')}
           </span>
           {message.isEdited && (
-            <span className="text-[9px] text-zinc-600 font-medium italic">
+            <span className="text-xs text-zinc-500 font-medium italic">
               (edited)
             </span>
           )}
           {isPinned && (
-            <span className="inline-flex items-center gap-0.5 text-[9px] text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold">
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-500/20 font-bold">
               <Pin className="w-2.5 h-2.5 fill-amber-500" />
               Pinned
             </span>
@@ -200,13 +200,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
         </div>
 
         {/* Content body */}
-        <div className="mt-1.5 text-zinc-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
+        <div className="mt-1.5 text-zinc-800 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
           {isEditing ? (
             <div className="space-y-2 mt-1">
               <textarea
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-sm focus:outline-none focus:border-indigo-500 text-white resize-none"
+                className="w-full bg-white border border-zinc-200 rounded-lg p-2 text-[15px] focus:outline-none focus:border-indigo-500 text-zinc-900 resize-none"
                 rows={2}
               />
               <div className="flex items-center gap-2">
@@ -218,7 +218,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
                 </button>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="px-3 py-1 hover:bg-zinc-800 text-zinc-400 text-xs font-semibold rounded-lg"
+                  className="px-3 py-1 hover:bg-zinc-100 text-zinc-600 text-[13px] font-semibold rounded-lg"
                 >
                   Cancel
                 </button>
@@ -246,14 +246,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
                 <button
                   key={emoji}
                   onClick={() => handleReactionClick(emoji)}
-                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-xs transition-all ${
+                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[13px] transition-all ${
                     hasReacted
-                      ? 'bg-indigo-600/10 border-indigo-500 text-indigo-400 font-bold scale-[1.02]'
-                      : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+                      ? 'bg-indigo-50 border-indigo-200 text-indigo-600 font-bold scale-[1.02]'
+                      : 'bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
                   }`}
                 >
                   <span>{emoji}</span>
-                  <span className="text-[10px]">{userIds.length}</span>
+                  <span className="text-xs">{userIds.length}</span>
                 </button>
               );
             })}
@@ -264,11 +264,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
         {message._count?.replies && message._count.replies > 0 ? (
           <button
             onClick={() => setActiveThreadMessage(message)}
-            className="flex items-center gap-1.5 mt-2.5 text-xs text-indigo-400 hover:text-indigo-300 font-semibold transition-colors group/link focus:outline-none"
+            className="flex items-center gap-1.5 mt-2.5 text-[13px] text-indigo-600 hover:text-indigo-500 font-semibold transition-colors group/link focus:outline-none"
           >
             <MessageSquare className="w-3.5 h-3.5" />
             <span>{message._count.replies} {message._count.replies === 1 ? 'reply' : 'replies'}</span>
-            <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-[10px]">
+            <span className="opacity-0 group-hover/link:opacity-100 transition-opacity text-xs">
               → view thread
             </span>
           </button>
@@ -277,14 +277,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
 
       {/* Floating Toolbar on Hover */}
       {!isEditing && (
-        <div className="absolute -top-3.5 right-4 flex items-center bg-zinc-950 border border-zinc-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all p-0.5 divide-x divide-zinc-800/60 z-[10]">
+        <div className="absolute -top-3.5 right-4 flex items-center bg-white border border-zinc-200 rounded-lg shadow-sm opacity-0 group-hover:opacity-100 transition-all p-0.5 divide-x divide-zinc-200 z-[10]">
           {/* Reaction shortcut quick bar */}
           <div className="flex items-center px-1">
             {['👍', '🔥', '✅'].map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => handleReactionClick(emoji)}
-                className="hover:bg-zinc-800 p-1 rounded text-xs transition-colors"
+                className="hover:bg-zinc-100 p-1 rounded text-[13px] transition-colors"
               >
                 {emoji}
               </button>
@@ -292,7 +292,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
             <EmojiPicker
               onEmojiSelect={(emoji) => handleReactionClick(emoji)}
               trigger={
-                <button className="text-zinc-400 hover:text-white p-1 rounded hover:bg-zinc-800 focus:outline-none">
+                <button className="text-zinc-500 hover:text-zinc-900 p-1 rounded hover:bg-zinc-100 focus:outline-none">
                   <Smile className="w-3.5 h-3.5" />
                 </button>
               }
@@ -303,7 +303,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
             {/* Thread replies */}
             <button
               onClick={() => setActiveThreadMessage(message)}
-              className="text-zinc-400 hover:text-white p-1 hover:bg-zinc-800 rounded focus:outline-none"
+              className="text-zinc-500 hover:text-zinc-900 p-1 hover:bg-zinc-100 rounded focus:outline-none"
               title="Reply in thread"
             >
               <MessageSquare className="w-3.5 h-3.5" />
@@ -313,7 +313,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
             {user?.role !== 'MARKETING' && (
               <button
                 onClick={() => onConvertTask(message)}
-                className="text-zinc-400 hover:text-indigo-400 p-1 hover:bg-indigo-600/10 rounded focus:outline-none"
+                className="text-zinc-500 hover:text-indigo-600 p-1 hover:bg-indigo-50 rounded focus:outline-none"
                 title="Convert to operational Task"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
@@ -323,7 +323,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
             {/* Options Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-zinc-400 hover:text-white p-1 hover:bg-zinc-800 rounded focus:outline-none">
+                <button className="text-zinc-500 hover:text-zinc-900 p-1 hover:bg-zinc-100 rounded focus:outline-none">
                   <MoreHorizontal className="w-3.5 h-3.5" />
                 </button>
               </DropdownMenuTrigger>

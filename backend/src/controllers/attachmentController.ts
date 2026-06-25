@@ -1,24 +1,49 @@
 import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
+import cloudinary from '../utils/cloudinary';
+import { UploadApiResponse } from 'cloudinary';
+import streamifier from 'streamifier';
 
-// A simple mock attachment controller since we don't have AWS S3 set up.
-// For real attachments we would use multer + upload to cloud storage.
-export const addAttachment = async (req: Request, res: Response) => {
+export const addAttachment = async (req: Request, res: Response): Promise<void> => {
   try {
     const { taskId } = req.params;
-    const { fileName, fileUrl, fileType, fileSize } = req.body;
     const user = req.user;
 
     if (!user) {
-      return res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
     }
+
+    if (!req.file) {
+      res.status(400).json({ error: 'No file uploaded' });
+      return;
+    }
+
+    // Upload to Cloudinary using a stream (since we use multer memoryStorage)
+    const streamUpload = (fileBuffer: Buffer): Promise<UploadApiResponse> => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: 'auto' }, // auto detects if it's an image, pdf, etc.
+          (error, result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
+            }
+          }
+        );
+        streamifier.createReadStream(fileBuffer).pipe(stream);
+      });
+    };
+
+    const uploadResult = await streamUpload(req.file.buffer);
 
     const attachment = await prisma.attachment.create({
       data: {
-        fileName,
-        fileUrl,
-        fileType,
-        fileSize,
+        fileName: req.file.originalname,
+        fileUrl: uploadResult.secure_url,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
         taskId
       }
     });
@@ -29,13 +54,13 @@ export const addAttachment = async (req: Request, res: Response) => {
         taskId,
         userId: user.id,
         action: 'ATTACHMENT_ADDED',
-        newValue: fileName
+        newValue: req.file.originalname
       }
     });
 
     res.status(201).json(attachment);
   } catch (error) {
-    console.error(error);
+    console.error('Attachment Upload Error:', error);
     res.status(500).json({ error: 'Failed to add attachment' });
   }
 };

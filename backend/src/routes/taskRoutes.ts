@@ -3,6 +3,9 @@ import { getTasks, getTaskById, createTask, updateTask, deleteTask, archiveTask,
 import { commentsController } from '../modules/comments/comments.controller';
 import { addAttachment, deleteAttachment } from '../controllers/attachmentController';
 import { addSubtask, updateSubtask, deleteSubtask } from '../controllers/subtaskController';
+import multer from 'multer';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 import { requirePermission } from '../middleware/rbac/requirePermission';
 import { validateRequest } from '../validators/validate';
@@ -30,7 +33,7 @@ router.put('/comments/:id', commentsController.updateComment);
 router.delete('/comments/:id', commentsController.deleteComment);
 
 // Attachments
-router.post('/:taskId/attachments', addAttachment);
+router.post('/:taskId/attachments', upload.single('file'), addAttachment);
 router.delete('/attachments/:id', deleteAttachment);
 
 // Subtasks

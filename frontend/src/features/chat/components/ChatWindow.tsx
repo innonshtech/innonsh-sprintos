@@ -52,27 +52,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ channel, onConvertTask }
     : null;
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-zinc-950 overflow-hidden">
+    <div className="flex-1 flex flex-col h-full bg-white overflow-hidden">
       {/* Header */}
-      <header className="h-14 border-b border-zinc-800 flex items-center justify-between px-6 bg-zinc-950 flex-shrink-0 z-[10]">
+      <header className="h-14 border-b border-zinc-200 flex items-center justify-between px-6 bg-white flex-shrink-0 z-[10]">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-extrabold text-sm text-white truncate leading-tight">
+            <span className="font-extrabold text-[15px] text-zinc-900 truncate leading-tight">
               {channel.type === 'DIRECT' ? `DM: ${channel.name}` : `#${channel.name}`}
             </span>
-            <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 rounded tracking-wider bg-zinc-900 border border-zinc-800 text-zinc-500">
+            <span className="text-xs uppercase font-extrabold px-1.5 py-0.5 rounded tracking-wider bg-zinc-100 border border-zinc-200 text-zinc-500">
               {channel.type}
             </span>
           </div>
           {channel.type === 'DIRECT' && otherMember ? (
             <div className="flex items-center gap-2 mt-0.5">
-              <span className={`w-1.5 h-1.5 rounded-full ${presence === 'ONLINE' ? 'bg-emerald-500' : presence === 'AWAY' ? 'bg-amber-500' : 'bg-zinc-600'}`} />
-              <p className="text-[10px] text-zinc-500 truncate max-w-md font-medium">
+              <span className={`w-1.5 h-1.5 rounded-full ${presence === 'ONLINE' ? 'bg-emerald-500' : presence === 'AWAY' ? 'bg-amber-500' : 'bg-zinc-300'}`} />
+              <p className="text-xs text-zinc-500 truncate max-w-md font-medium">
                 {presence === 'ONLINE' ? 'Online' : presence === 'AWAY' ? 'Away' : lastSeenText}
               </p>
             </div>
           ) : channel.description ? (
-            <p className="text-[10px] text-zinc-500 mt-0.5 truncate max-w-md font-medium">
+            <p className="text-xs text-zinc-500 mt-0.5 truncate max-w-md font-medium">
               {channel.description}
             </p>
           ) : null}
@@ -82,8 +82,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ channel, onConvertTask }
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setPinsOpen(!pinsOpen)}
-            className={`text-zinc-500 hover:text-white transition-colors p-1.5 rounded-lg hover:bg-zinc-900 focus:outline-none flex items-center gap-1 text-xs font-semibold border border-transparent hover:border-zinc-800 ${
-              pinsOpen ? 'bg-zinc-900 border-zinc-800 text-white' : ''
+            className={`text-zinc-500 hover:text-zinc-900 transition-colors p-1.5 rounded-lg hover:bg-zinc-100 focus:outline-none flex items-center gap-1 text-[13px] font-semibold border border-transparent hover:border-zinc-200 ${
+              pinsOpen ? 'bg-zinc-100 border-zinc-300 text-zinc-900' : ''
             }`}
             title="View pinned notes"
           >
@@ -135,9 +135,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ channel, onConvertTask }
                   
               acc.push(
                 <div key={`date-${message.id}`} className="flex items-center my-6">
-                  <div className="flex-1 h-px bg-zinc-800"></div>
-                  <span className="px-4 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{dateText}</span>
-                  <div className="flex-1 h-px bg-zinc-800"></div>
+                  <div className="flex-1 h-px bg-zinc-200"></div>
+                  <span className="px-4 text-[11px] font-bold text-zinc-500 uppercase tracking-wider">{dateText}</span>
+                  <div className="flex-1 h-px bg-zinc-200"></div>
                 </div>
               );
             }
@@ -156,12 +156,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ channel, onConvertTask }
       </div>
 
       {/* Typing indicators */}
-      <div className="px-6 py-1 bg-zinc-950 flex-shrink-0">
+      <div className="px-6 py-1 bg-white flex-shrink-0">
         <TypingIndicator />
       </div>
 
       {/* Editor footer */}
-      <div className="p-4 bg-zinc-950 border-t border-zinc-900 flex-shrink-0">
+      <div className="p-4 bg-white border-t border-zinc-200 flex-shrink-0">
         <MessageEditor
           onSend={handleSendMessage}
           placeholder={

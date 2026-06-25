@@ -29,6 +29,8 @@ import notificationRoutes from './routes/notificationRoutes';
 import commentsRouter from './modules/comments/comments.routes';
 import searchRouter from './modules/search/search.routes';
 import chatRoutes from './modules/chat/chat.routes';
+import timesheetRoutes from './routes/timesheetRoutes';
+import cronRoutes from './routes/cronRoutes';
 
 const app: Application = express();
 
@@ -100,6 +102,9 @@ app.get('/', (req: Request, res: Response) => {
 // 6. Mount Auth Routes (Login, Logout, Refresh are open)
 app.use('/api/v1/auth', authRoutes);
 
+// 6.5 Mount Cron Routes (Open to Vercel via CRON_SECRET)
+app.use('/api/cron', cronRoutes);
+
 // 7. Apply global authorization protection for all other APIs
 app.use(requireAuth);
 
@@ -124,6 +129,7 @@ app.use('/api/v1/team-members', teamRoutes);
 app.use('/api/v1/comments', commentsRouter);
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/chat', chatRoutes);
+app.use('/api/v1/timesheets', timesheetRoutes);
 
 // 9. Centralized and Sanitized Error Handler (Never expose internal stack traces or database info)
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

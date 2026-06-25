@@ -139,8 +139,12 @@ export const useUpdateSubtask = () => {
 export const useAddAttachment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ taskId, fileData }: { taskId: string; fileData: any }) => {
-      const { data } = await api.post(`/tasks/${taskId}/attachments`, fileData);
+    mutationFn: async ({ taskId, fileData }: { taskId: string; fileData: FormData }) => {
+      const { data } = await api.post(`/tasks/${taskId}/attachments`, fileData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       return data;
     },
     onSuccess: (_, variables) => {

@@ -18,7 +18,8 @@ import {
   Briefcase,
   Activity,
   ShieldCheck,
-  Calendar
+  Calendar,
+  FileText
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -48,6 +49,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
+    { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
     { icon: BarChart, label: 'Analytics', path: '/dashboard/analytics' },
     { icon: BarChart, label: 'Reports', path: '/dashboard/reports' },
     { icon: ShieldCheck, label: 'Audit Log', path: '/dashboard/organization-audit' },
@@ -62,6 +64,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
+    { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
     { icon: Activity, label: 'Activity Log', path: '/dashboard/activity' },
     { icon: BarChart, label: 'Sprint Reports', path: '/dashboard/sprint-reports' },
     { icon: MessageSquare, label: 'Feedbacks', path: '/dashboard/feedbacks' },
@@ -73,6 +76,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: Briefcase, label: 'Campaign Tasks', path: '/dashboard/campaign-tasks' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
+    { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
     { icon: Activity, label: 'Activity Log', path: '/dashboard/activity' },
     { icon: MessageSquare, label: 'Feedbacks', path: '/dashboard/feedbacks' },
     { icon: Calendar, label: 'Calendar', path: '/dashboard/calendar' },
@@ -80,6 +84,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
   ],
   ADMIN: [
     { icon: LayoutDashboard, label: 'Admin Dashboard', path: '/admin' },
+    { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
   ]
 };
 
@@ -126,10 +131,8 @@ export default function DashboardLayout() {
       }`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">SprintOS</span>
+            <img src="/logo.png" alt="Innonsh Logo" className="w-8 h-8 object-contain rounded-md" />
+            <span className="font-bold text-lg tracking-tight">Innonsh SprintOS</span>
           </div>
           <button 
             onClick={() => setIsMobileSidebarOpen(false)}
@@ -182,10 +185,8 @@ export default function DashboardLayout() {
       <aside className="w-64 border-r border-border bg-card/30 hidden md:flex flex-col flex-shrink-0">
         <div className="h-16 flex items-center px-6 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight">SprintOS</span>
+            <img src="/logo.png" alt="Innonsh Logo" className="w-8 h-8 object-contain rounded-md" />
+            <span className="font-bold text-lg tracking-tight">Innonsh SprintOS</span>
           </div>
         </div>
         

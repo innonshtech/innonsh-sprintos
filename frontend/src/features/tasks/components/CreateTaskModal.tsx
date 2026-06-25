@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useCreateTask } from '../api/taskApi';
+import { useState, useEffect, useRef } from 'react';
+import { useCreateTask, useAddAttachment } from '../api/taskApi';
 import { useToast } from '@/hooks/use-toast';
 import { useProjects } from '@/features/projects/api/projectApi';
 import { useSprints } from '@/features/sprints/api/sprintApi';
@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useTeam } from '@/features/team/api/teamApi';
+import { Paperclip, X } from 'lucide-react';
 
 interface CreateTaskModalProps {
   open: boolean;
@@ -24,6 +25,7 @@ interface CreateTaskModalProps {
 export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultSprintId, defaultTitle = '', defaultDescription = '' }: CreateTaskModalProps) {
   const { user } = useAuthStore();
   const createTask = useCreateTask();
+  const addAttachment = useAddAttachment();
   const { toast } = useToast();
   const { data: projects = [] } = useProjects();
   const { data: teamMembers = [] } = useTeam();
@@ -39,6 +41,9 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
   const [sprintId, setSprintId] = useState(defaultSprintId || 'none');
   const [assigneeId, setAssigneeId] = useState('none');
   const [storyPoints, setStoryPoints] = useState('');
+  
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
@@ -46,6 +51,7 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
       setDescription(defaultDescription);
       if (defaultProjectId) setProjectId(defaultProjectId);
       if (defaultSprintId) setSprintId(defaultSprintId);
+      setFiles([]);
     }
   }, [open, defaultTitle, defaultDescription, defaultProjectId, defaultSprintId]);
 
@@ -73,6 +79,18 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
       setKey('');
       setDescription('');
       setStoryPoints('');
+      setFiles([]);
+
+      const createdTaskId = response.task?.id || response.id;
+      if (createdTaskId && files.length > 0) {
+        toast({ title: "Uploading attachments..." });
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('file', file);
+          await addAttachment.mutateAsync({ taskId: createdTaskId, fileData: formData });
+        }
+        toast({ title: "Attachments uploaded successfully." });
+      }
 
       if (response.emailTriggered) {
         toast({
@@ -203,6 +221,44 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Attachments</Label>
+            <div className="flex items-center gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Paperclip className="w-4 h-4 mr-2" />
+                Attach Files
+              </Button>
+              <input 
+                type="file" 
+                multiple
+                className="hidden" 
+                ref={fileInputRef} 
+                onChange={(e) => {
+                  if (e.target.files) {
+                    setFiles(prev => [...prev, ...Array.from(e.target.files!)]);
+                  }
+                }}
+              />
+            </div>
+            {files.length > 0 && (
+              <div className="flex flex-col gap-1 mt-2">
+                {files.map((f, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm p-2 bg-muted rounded">
+                    <span className="truncate">{f.name}</span>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))}>
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <DialogFooter className="mt-6">

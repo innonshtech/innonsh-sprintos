@@ -12,5 +12,11 @@
       "source": "/(.*)",
       "destination": "/src/api/index.ts"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/remind-timesheets",
+      "schedule": "15 12 * * 1-5"
+    }
   ]
 }

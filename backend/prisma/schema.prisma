@@ -120,6 +120,7 @@ model User {
   chatMemberships     ChatMember[]
   pinnedMessages      PinnedMessage[]
   createdChannels     ChatChannel[]           @relation("CreatedChannels")
+  timesheets          Timesheet[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -701,4 +702,20 @@ model PinnedMessage {
   pinnedBy   User        @relation(fields: [pinnedById], references: [id], onDelete: Cascade)
 
   @@unique([channelId, messageId])
+}
+
+model Timesheet {
+  id            String   @id @default(uuid())
+  userId        String
+  date          DateTime @default(now()) // The day the timesheet is for
+  tasksWorkedOn String   // Summary of what was done
+  hoursWorked   Float    // Number of hours worked
+  notes         String?  // Optional notes
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([date])
 }

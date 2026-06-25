@@ -28,6 +28,7 @@ import OrganizationAuditLogPage from './features/activity/pages/OrganizationAudi
 import SettingsPage from './features/settings/pages/SettingsPage';
 import CalendarPage from './pages/CalendarPage';
 import ChatPage from './features/chat/pages/ChatPage';
+import { TimesheetsPage } from './features/timesheets/pages/TimesheetsPage';
 
 import { useState, useEffect } from 'react';
 import { ShieldAlert } from 'lucide-react';
@@ -123,6 +124,7 @@ function App() {
               <Route path="boards" element={<KanbanBoardPage />} />
               
               <Route path="standups" element={<StandupPage />} />
+              <Route path="timesheets" element={<TimesheetsPage />} />
               
               {/* Product Manager Only Routes */}
               <Route element={<RoleProtectedRoute allowedRoles={['PRODUCT_MANAGER']} />}>

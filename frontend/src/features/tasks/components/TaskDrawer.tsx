@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import TaskComments from './TaskComments';
 import TaskActivityTimeline from './TaskActivityTimeline';
+import TaskAttachments from './TaskAttachments';
 import { CreateDiscussionModal } from '@/features/chat/components/CreateDiscussionModal';
 
 interface TaskDrawerProps {
@@ -445,26 +446,12 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                           Mark as Done
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" className="w-full justify-start">
-                        <Paperclip className="w-4 h-4 mr-2" />
-                        Attach File
-                      </Button>
                     </div>
                   </div>
                   
-                  {task.attachments?.length > 0 && (
-                    <div className="pt-2 border-t border-border/50">
-                      <span className="text-xs text-muted-foreground block mb-2">Attachments</span>
-                      <div className="space-y-2">
-                        {task.attachments.map((att: any) => (
-                          <div key={att.id} className="flex items-center gap-2 text-sm p-2 border rounded-md hover:bg-muted/50 cursor-pointer">
-                            <Paperclip className="w-4 h-4 text-muted-foreground" />
-                            <span className="truncate flex-1" title={att.fileName}>{att.fileName}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  <div className="pt-4 border-t border-border/50">
+                    <TaskAttachments taskId={task.id} attachments={task.attachments} />
+                  </div>
                   
                 </div>
               </section>

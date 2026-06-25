@@ -21,6 +21,7 @@ async function startServer() {
     // Initialize daily standup reminder cron job
     initStandupReminderCron();
     console.log('Daily standup reminder cron job initialized.');
+    console.log('Daily slack cron job initialized.');
 
     server.listen(PORT, () => {
       console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);

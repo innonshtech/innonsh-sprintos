@@ -64,21 +64,21 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex bg-zinc-950 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl relative">
+    <div className="h-[calc(100vh-8rem)] flex bg-white border border-zinc-200 rounded-2xl overflow-hidden shadow-sm relative text-sm">
       {/* 1. Sidebar */}
       <ChatSidebar onSearchOpen={() => setSearchOpen(true)} />
 
       {/* 2. Main Window area */}
-      <div className="flex-1 flex overflow-hidden bg-zinc-950">
+      <div className="flex-1 flex overflow-hidden bg-white">
         {activeChannel ? (
           <ChatWindow
             channel={activeChannel}
             onConvertTask={handleConvertTask}
           />
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 text-xs font-semibold gap-3 p-8">
+          <div className="flex-1 flex flex-col items-center justify-center text-zinc-500 text-sm font-semibold gap-3 p-8">
             <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center border border-indigo-500/25">
-              <MessageSquare className="w-6 h-6 text-indigo-400" />
+              <MessageSquare className="w-6 h-6 text-indigo-500" />
             </div>
             <span>Select a task discussion, project channel, or start a DM to collaborate.</span>
           </div>
