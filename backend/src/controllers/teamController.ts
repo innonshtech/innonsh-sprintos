@@ -248,3 +248,36 @@ export const deleteTeamMember = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to deactivate team member' });
   }
 };
+
+export const getRolePermissions = async (req: Request, res: Response) => {
+  try {
+    const permissions = await (prisma as any).rolePermission.findMany();
+    res.status(200).json({ success: true, data: permissions });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to fetch role permissions' });
+  }
+};
+
+export const updateRolePermissions = async (req: Request, res: Response) => {
+  try {
+    const { role, permissions } = req.body;
+    const userId = req.user?.id;
+
+    // Saket Patil Authorization Check
+    const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!currentUser || (currentUser.email !== 'saket.innonsh@gmail.com' && currentUser.role !== 'PRODUCT_MANAGER' && currentUser.role !== 'ADMIN')) {
+      return res.status(403).json({ success: false, message: 'Only Saket Patil has permission to modify feature flags & access controls.' });
+    }
+
+    const updated = await (prisma as any).rolePermission.upsert({
+      where: { role },
+      update: { permissions, updatedById: userId },
+      create: { role, permissions, updatedById: userId },
+    });
+
+    res.status(200).json({ success: true, data: updated, message: `Updated permissions for ${role}` });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message || 'Failed to update permissions' });
+  }
+};
+

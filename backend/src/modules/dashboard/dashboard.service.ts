@@ -19,7 +19,7 @@ export class DashboardService {
 
     const tasks = activeSprint.tasks || [];
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'DONE').length;
+    const completedTasks = tasks.filter((t: any) => t.status === 'DONE').length;
     const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
     const startDate = new Date(activeSprint.startDate);
@@ -31,7 +31,7 @@ export class DashboardService {
     const daysRemaining = Math.max(0, totalDays - daysElapsed);
 
     const blockedTasksRaw = await this.repo.getBlockedTasks(activeSprint.id);
-    const blockedTasks = blockedTasksRaw.map(t => ({
+    const blockedTasks = blockedTasksRaw.map((t: any) => ({
       id: t.id,
       title: t.title,
       assignee: t.assignee?.name || 'Unassigned',
@@ -40,7 +40,7 @@ export class DashboardService {
       timeBlocked: `${Math.ceil((today.getTime() - new Date(t.blockers[0]?.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days`
     }));
 
-    const overdueTasks = tasks.filter(t => t.status !== 'DONE' && t.dueDate && new Date(t.dueDate) < today).length;
+    const overdueTasks = tasks.filter((t: any) => t.status !== 'DONE' && t.dueDate && new Date(t.dueDate) < today).length;
 
     let sprintStatus = 'HEALTHY';
     if (blockedTasks.length > 2 || overdueTasks > 3) {
@@ -79,12 +79,12 @@ export class DashboardService {
 
     const tasks = activeSprint.tasks || [];
     
-    return members.map(member => {
-      const memberTasks = tasks.filter(t => t.assigneeId === member.id);
+    return members.map((member: any) => {
+      const memberTasks = tasks.filter((t: any) => t.assigneeId === member.id);
       const assignedTasks = memberTasks.length;
-      const completedTasks = memberTasks.filter(t => t.status === 'DONE').length;
+      const completedTasks = memberTasks.filter((t: any) => t.status === 'DONE').length;
       const pendingTasks = assignedTasks - completedTasks;
-      const blockers = memberTasks.filter(t => t.blockers && t.blockers.some((b: any) => !b.isResolved)).length;
+      const blockers = memberTasks.filter((t: any) => t.blockers && t.blockers.some((b: any) => !b.isResolved)).length;
       
       const utilization = Math.min(100, assignedTasks === 0 ? 0 : Math.round((assignedTasks / 8) * 100)); // Assuming 8 is max capacity per sprint
       
@@ -112,11 +112,11 @@ export class DashboardService {
     const tasks = activeSprint.tasks || [];
     
     const getColData = (statusStr: string) => {
-      const colTasks = tasks.filter(t => t.status === statusStr);
+      const colTasks = tasks.filter((t: any) => t.status === statusStr);
       return {
         count: colTasks.length,
-        storyPoints: colTasks.reduce((acc, t) => acc + (t.storyPoints || 0), 0),
-        members: [...new Set(colTasks.map(t => t.assignee?.avatar || t.assignee?.name?.charAt(0)).filter(Boolean))]
+        storyPoints: colTasks.reduce((acc: number, t: any) => acc + (t.storyPoints || 0), 0),
+        members: [...new Set(colTasks.map((t: any) => t.assignee?.avatar || t.assignee?.name?.charAt(0)).filter(Boolean))]
       };
     };
 
@@ -126,7 +126,7 @@ export class DashboardService {
       review: getColData('IN_REVIEW'),
       testing: getColData('IN_TESTING'),
       done: getColData('DONE'),
-      totalStoryPoints: tasks.reduce((acc, t) => acc + (t.storyPoints || 0), 0)
+      totalStoryPoints: tasks.reduce((acc: number, t: any) => acc + (t.storyPoints || 0), 0)
     };
   }
 
@@ -140,7 +140,7 @@ export class DashboardService {
     // Group by member, get latest
     const latestStandups: any[] = [];
     
-    members.forEach(member => {
+    members.forEach((member: any) => {
       const memberStandups = standups.filter(s => s.userId === member.id);
       const latest = memberStandups[0]; // ordered desc by date
       

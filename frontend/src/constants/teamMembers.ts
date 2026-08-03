@@ -3,6 +3,7 @@ import type { TeamMember, UserRole } from "../types/user";
 export const USER_ROLES: UserRole[] = [
   "ADMIN",
   "PRODUCT_MANAGER",
+  "PRODUCT_OWNER",
   "DEVELOPER",
   "MARKETING"
 ];
@@ -16,12 +17,13 @@ export const DEPARTMENTS = [
 export const ROLE_COLORS: Record<UserRole, string> = {
   ADMIN: "bg-rose-500/10 text-rose-600 border-rose-200 dark:text-rose-400 dark:border-rose-800",
   PRODUCT_MANAGER: "bg-indigo-500/10 text-indigo-600 border-indigo-200 dark:text-indigo-400 dark:border-indigo-800",
+  PRODUCT_OWNER: "bg-purple-500/10 text-purple-600 border-purple-200 dark:text-purple-400 dark:border-purple-800",
   DEVELOPER: "bg-blue-500/10 text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-800",
   MARKETING: "bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:text-emerald-400 dark:border-emerald-800",
 };
 
 export const TEAM_MEMBERS: TeamMember[] = [
-  // EXECUTIVE
+  // EXECUTIVE & ADMIN
   {
     id: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
     name: "Nikheel",
@@ -32,6 +34,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     status: "ONLINE",
     avatar: "https://i.pravatar.cc/150?u=nikheel",
     color: "rose",
+    isActive: true,
   },
   // PRODUCT MANAGEMENT
   {
@@ -44,19 +47,48 @@ export const TEAM_MEMBERS: TeamMember[] = [
     status: "ONLINE",
     avatar: "https://i.pravatar.cc/150?u=saket",
     color: "indigo",
+    isActive: true,
   },
-  // DEVELOPMENT TEAM
+
+  // NEW TEAM MEMBERS (DEFAULT ROLE: PRODUCT_OWNER)
   {
-    id: "ec63ffb8-e267-4b77-b591-d56a51803522",
-    name: "Chetana",
-    email: "chetana.innonsh@gmail.com",
-    password: "chetana123",
-    role: "DEVELOPER",
+    id: "ashish-jain-uuid-001",
+    name: "Ashish Jain",
+    email: "ashish.jain@hyperlocalventures.com",
+    password: "ashish123",
+    role: "PRODUCT_OWNER",
+    department: "Product Management",
+    status: "ONLINE",
+    avatar: "https://i.pravatar.cc/150?u=ashish",
+    color: "purple",
+    isActive: true,
+  },
+  {
+    id: "pratik-kotangale-uuid-002",
+    name: "Pratik Kotangale",
+    email: "kotangale.pratik18@dmsiitd.org",
+    password: "pratik123",
+    role: "PRODUCT_OWNER",
     department: "Engineering",
     status: "ONLINE",
-    avatar: "https://i.pravatar.cc/150?u=chetana",
-    color: "orange",
+    avatar: "https://i.pravatar.cc/150?u=pratik",
+    color: "cyan",
+    isActive: true,
   },
+  {
+    id: "shashank-mohore-uuid-003",
+    name: "Shashank Mohore",
+    email: "shashank.mohore@hyperlocalventures.com",
+    password: "shashank123",
+    role: "PRODUCT_OWNER",
+    department: "Engineering",
+    status: "ONLINE",
+    avatar: "https://i.pravatar.cc/150?u=shashank",
+    color: "amber",
+    isActive: true,
+  },
+
+  // DEVELOPMENT TEAM
   {
     id: "526bbc44-08f1-452c-a889-8a2dcd4b31da",
     name: "Lokeek",
@@ -67,6 +99,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     status: "ONLINE",
     avatar: "https://i.pravatar.cc/150?u=lokeek",
     color: "blue",
+    isActive: true,
   },
   {
     id: "b7019483-6db5-4b5e-86d5-c89c7fc98915",
@@ -78,30 +111,21 @@ export const TEAM_MEMBERS: TeamMember[] = [
     status: "ONLINE",
     avatar: "https://i.pravatar.cc/150?u=vaibhav",
     color: "emerald",
+    isActive: true,
   },
+
+  // HIDDEN FOR NOW (isActive: false)
   {
-    id: "0764372f-a5ea-4f15-ad52-9b19b9479ace",
-    name: "Aniket",
-    email: "aniket.innonsh@gmail.com",
-    password: "aniket123",
+    id: "ec63ffb8-e267-4b77-b591-d56a51803522",
+    name: "Chetana",
+    email: "chetana.innonsh@gmail.com",
+    password: "chetana123",
     role: "DEVELOPER",
     department: "Engineering",
-    status: "ONLINE",
-    avatar: "https://i.pravatar.cc/150?u=aniket",
-    color: "cyan",
-  },
-  // MARKETING TEAM
-  {
-    id: "uuid-4",
-    name: "Tasmiya Shaikh",
-    email: "tasmiya.shaikh@innonsh.com",
-    password: "tasmiya123",
-    role: "MARKETING",
-    department: "Marketing",
-    avatar: "https://i.pravatar.cc/150?u=tasmiya",
-    status: "online",
-    assignedTasks: 4,
-    completedSprintTasks: 10
+    status: "OFFLINE",
+    avatar: "https://i.pravatar.cc/150?u=chetana",
+    color: "orange",
+    isActive: false,
   },
   {
     id: "3a8db40b-6c7f-4ac3-bd5f-198fea06b880",
@@ -111,8 +135,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "MARKETING",
     department: "Marketing",
     avatar: "https://i.pravatar.cc/150?u=reshma",
-    status: "offline",
-    assignedTasks: 2,
-    completedSprintTasks: 5
+    status: "OFFLINE",
+    isActive: false,
   }
 ];

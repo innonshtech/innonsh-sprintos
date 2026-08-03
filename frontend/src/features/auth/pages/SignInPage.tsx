@@ -123,7 +123,7 @@ export default function SignInPage() {
                   <SelectValue placeholder="Select your team member profile..." />
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px]">
-                  {TEAM_MEMBERS.map((member) => (
+                  {TEAM_MEMBERS.filter(m => m.isActive !== false).map((member) => (
                     <SelectItem key={member.id} value={member.id} className="py-3 cursor-pointer">
                       <div className="flex items-center gap-3">
                         <div className="flex flex-col text-left">

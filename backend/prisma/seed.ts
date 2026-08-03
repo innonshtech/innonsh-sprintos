@@ -4,15 +4,15 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 const users = [
-  { name: "Saket", email: "saket.innonsh@gmail.com", password: "saket123", role: UserRole.PRODUCT_MANAGER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=saket" },
-  { name: "Chetana", email: "chetana.innonsh@gmail.com", password: "chetana123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=chetana" },
-  { name: "Lokeek", email: "lokeek.innonsh@gmail.com", password: "lokeek123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=lokeek" },
-  { name: "Vaibhav", email: "vaibhav.innonsh@gmail.com", password: "vaibhav123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=vaibhav" },
-  { name: "Yukta", email: "yukta.innonsh@gmail.com", password: "yukta123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=yukta" },
-  { name: "Aniket", email: "aniket.innonsh@gmail.com", password: "aniket123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=aniket" },
-  { name: "Tasmiya Shaikh", email: "tasmiya.shaikh@innonsh.com", password: "tasmiya123", role: UserRole.MARKETING, department: "Marketing", avatar: "https://i.pravatar.cc/150?u=tasmiya" },
-  { name: "Reshma", email: "reshma.innonsh@gmail.com", password: "reshma123", role: UserRole.MARKETING, department: "Marketing", avatar: "https://i.pravatar.cc/150?u=reshma" },
-  { name: "Nikheel", email: "nikheel.innonsh@gmail.com", password: "nikheel123", role: UserRole.ADMIN, department: "Executive", avatar: "https://i.pravatar.cc/150?u=nikheel" }
+  { name: "Saket", email: "saket.innonsh@gmail.com", password: "saket123", role: UserRole.PRODUCT_MANAGER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=saket", isActive: true },
+  { name: "Lokeek", email: "lokeek.innonsh@gmail.com", password: "lokeek123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=lokeek", isActive: true },
+  { name: "Vaibhav", email: "vaibhav.innonsh@gmail.com", password: "vaibhav123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=vaibhav", isActive: true },
+  { name: "Ashish Jain", email: "ashish.jain@hyperlocalventures.com", password: "ashish123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=ashish", isActive: true },
+  { name: "Pratik Kotangale", email: "kotangale.pratik18@dmsiitd.org", password: "pratik123", role: UserRole.PRODUCT_OWNER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=pratik", isActive: true },
+  { name: "Shashank Mohore", email: "shashank.mohore@hyperlocalventures.com", password: "shashank123", role: UserRole.PRODUCT_OWNER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=shashank", isActive: true },
+  { name: "Chetana", email: "chetana.innonsh@gmail.com", password: "chetana123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=chetana", isActive: false },
+  { name: "Reshma", email: "reshma.innonsh@gmail.com", password: "reshma123", role: UserRole.MARKETING, department: "Marketing", avatar: "https://i.pravatar.cc/150?u=reshma", isActive: false },
+  { name: "Nikheel", email: "nikheel.innonsh@gmail.com", password: "nikheel123", role: UserRole.ADMIN, department: "Executive", avatar: "https://i.pravatar.cc/150?u=nikheel", isActive: true }
 ];
 
 async function main() {

@@ -1,11 +1,10 @@
 export const EMAIL_MAPPINGS: Record<string, string> = {
   'Saket': 'saket.innonsh@gmail.com',
   'Lokeek': 'lokeek.innonsh@gmail.com',
-  'Aniket': 'aniket.innonsh@gmail.com',
-  'Chetana': 'chetana.innonsh@gmail.com',
   'Vaibhav': 'vaibhav.innonsh@gmail.com',
-  'Reshma': 'reshma.innonsh@gmail.com',
-  'Tasmiya': 'tasmiya.shaikh@innonsh.com',
+  'Ashish Jain': 'ashish.jain@hyperlocalventures.com',
+  'Pratik Kotangale': 'kotangale.pratik18@dmsiitd.org',
+  'Shashank Mohore': 'shashank.mohore@hyperlocalventures.com',
 };
 
 export const MAIL_FROM = `SprintOS <${process.env.MAIL_USER || 'innonsh.technologies@gmail.com'}>`;

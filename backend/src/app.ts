@@ -31,8 +31,11 @@ import searchRouter from './modules/search/search.routes';
 import chatRoutes from './modules/chat/chat.routes';
 import timesheetRoutes from './routes/timesheetRoutes';
 import cronRoutes from './routes/cronRoutes';
+import userStoryRoutes from './modules/userStories/userStory.routes';
+
 
 const app: Application = express();
+app.set('trust proxy', 1); // Trust first proxy (e.g., Vercel)
 
 // 1. Helmet Security Headers (CSP, XSS, Frameguard, HSTS, MIME Sniff)
 app.use(
@@ -130,6 +133,8 @@ app.use('/api/v1/comments', commentsRouter);
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/chat', chatRoutes);
 app.use('/api/v1/timesheets', timesheetRoutes);
+app.use('/api/v1/user-stories', userStoryRoutes);
+
 
 // 9. Centralized and Sanitized Error Handler (Never expose internal stack traces or database info)
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

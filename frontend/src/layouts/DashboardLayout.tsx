@@ -19,7 +19,8 @@ import {
   Activity,
   ShieldCheck,
   Calendar,
-  FileText
+  FileText,
+  FileSpreadsheet
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -39,6 +40,9 @@ import type { UserRole } from '@/types/user';
 import { GlobalSearchBar } from '@/features/search/GlobalSearchBar';
 import { useChannels } from '@/features/chat/api/chatApi';
 
+import { useRolePermissions, DEFAULT_ROLE_PERMISSIONS } from '@/features/team/api/rolePermissionsApi';
+import type { SidebarFeatureKey } from '@/features/team/api/rolePermissionsApi';
+
 // Access Control config
 const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string }[]> = {
   PRODUCT_MANAGER: [
@@ -46,6 +50,25 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: CheckSquare, label: 'Projects', path: '/dashboard/projects' },
     { icon: Clock, label: 'Sprints', path: '/dashboard/sprints' },
     { icon: CheckSquare, label: 'Tasks', path: '/dashboard/tasks' },
+    { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
+    { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
+    { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
+    { icon: Users, label: 'Standups', path: '/dashboard/standups' },
+    { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
+    { icon: BarChart, label: 'Analytics', path: '/dashboard/analytics' },
+    { icon: BarChart, label: 'Reports', path: '/dashboard/reports' },
+    { icon: ShieldCheck, label: 'Audit Log', path: '/dashboard/organization-audit' },
+    { icon: MessageSquare, label: 'Feedbacks', path: '/dashboard/feedbacks' },
+    { icon: Users, label: 'Team Management', path: '/dashboard/team' },
+    { icon: Calendar, label: 'Calendar', path: '/dashboard/calendar' },
+    { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+  ],
+  PRODUCT_OWNER: [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: CheckSquare, label: 'Projects', path: '/dashboard/projects' },
+    { icon: Clock, label: 'Sprints', path: '/dashboard/sprints' },
+    { icon: CheckSquare, label: 'Tasks', path: '/dashboard/tasks' },
+    { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
     { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
@@ -61,6 +84,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
   DEVELOPER: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: CheckSquare, label: 'My Tasks', path: '/dashboard/my-tasks' },
+    { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
     { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
@@ -74,6 +98,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
   MARKETING: [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Briefcase, label: 'Campaign Tasks', path: '/dashboard/campaign-tasks' },
+    { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
     { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
@@ -84,6 +109,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
   ],
   ADMIN: [
     { icon: LayoutDashboard, label: 'Admin Dashboard', path: '/admin' },
+    { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
     { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
   ]
 };
@@ -95,6 +121,8 @@ export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  const { data: dbPermissions = [] } = useRolePermissions();
 
   const { data: notifications = [], isLoading: isLoadingNotifications } = useNotifications();
   const markRead = useMarkNotificationRead();
@@ -113,7 +141,25 @@ export default function DashboardLayout() {
     SessionManager.performLogout();
   };
 
-  const sidebarItems = user ? (SIDEBAR_CONFIG[user.role] || []) : [];
+  const sidebarItems = useMemo(() => {
+    if (!user) return [];
+    const role = user.role;
+    const baseItems = SIDEBAR_CONFIG[role] || SIDEBAR_CONFIG.DEVELOPER;
+
+    const dbRecord = dbPermissions.find((p) => p.role === role);
+    const activePermissions = dbRecord?.permissions
+      ? { ...DEFAULT_ROLE_PERMISSIONS[role], ...dbRecord.permissions }
+      : DEFAULT_ROLE_PERMISSIONS[role];
+
+    if (!activePermissions) return baseItems;
+
+    return baseItems.filter((item) => {
+      if (item.label === 'Dashboard' || item.label === 'Admin Dashboard') return true;
+      const permKey = item.label as SidebarFeatureKey;
+      return activePermissions[permKey] !== false;
+    });
+  }, [user, dbPermissions]);
+
 
   return (
     <div className="h-screen bg-background text-foreground flex overflow-hidden">
