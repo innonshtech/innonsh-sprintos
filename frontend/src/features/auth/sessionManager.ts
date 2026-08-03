@@ -6,11 +6,16 @@ export class SessionManager {
     try {
       const data = await AuthApi.getMe();
       if (data.success && data.user) {
-        useAuthStore.getState().login(data.user, 'cookie-token', true); // cookie-token is a placeholder token representation for backward compatibility
+        const existingToken = useAuthStore.getState().token || 'cookie-token';
+        const tokenToStore = data.token || existingToken;
+        useAuthStore.getState().login(data.user, tokenToStore, true);
         return data.user;
       }
     } catch (error) {
-      useAuthStore.getState().logout();
+      const state = useAuthStore.getState();
+      if (!state.isAuthenticated) {
+        state.logout();
+      }
     }
     return null;
   }

@@ -7,8 +7,8 @@ import { emailService } from '../../services/email/email.service';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
-const COOKIE_SECURE = process.env.NODE_ENV === 'production';
-const COOKIE_SAME_SITE = process.env.NODE_ENV === 'production' ? 'none' : 'strict';
+const COOKIE_SECURE = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
+const COOKIE_SAME_SITE = (process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL)) ? 'none' : 'lax';
 
 function parseUserAgent(uaString: string | undefined): { browser: string; device: string } {
   if (!uaString) return { browser: 'Unknown', device: 'Unknown' };
@@ -221,6 +221,7 @@ export class AuthController {
 
       return res.status(200).json({
         success: true,
+        token: accessToken,
         user: {
           id: user.id,
           name: user.name,
@@ -292,7 +293,7 @@ export class AuthController {
           maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        return res.status(200).json({ success: true });
+        return res.status(200).json({ success: true, token: newAccessToken });
       } catch (rotationErr: any) {
         // Rotation service handles revoking sessions and logging suspicious attempts
         res.clearCookie('accessToken');

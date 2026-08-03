@@ -9,6 +9,17 @@ const api = axios.create({
   withCredentials: true, // Necessary to send and receive HTTP-Only cookies
 });
 
+api.interceptors.request.use(async (config) => {
+  try {
+    const { useAuthStore } = await import('../features/auth/store/authStore');
+    const token = useAuthStore.getState().token;
+    if (token && token !== 'sprintos-cookie-token' && token !== 'cookie-token') {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch {}
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
