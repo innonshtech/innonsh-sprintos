@@ -16,8 +16,12 @@ api.interceptors.response.use(
 
     // Check if error is 401 (Unauthorized) and has not been retried yet
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Avoid infinite loop if refresh or login itself is failing
-      if (originalRequest.url?.includes('/auth/refresh') || originalRequest.url?.includes('/auth/login')) {
+      // Avoid infinite loop if refresh, login, or initial session check itself is failing
+      if (
+        originalRequest.url?.includes('/auth/refresh') || 
+        originalRequest.url?.includes('/auth/login') ||
+        originalRequest.url?.includes('/auth/me')
+      ) {
         return Promise.reject(error);
       }
 
