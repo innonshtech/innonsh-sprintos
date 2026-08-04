@@ -12,3 +12,15 @@ export interface SendTaskAssignedMailParams {
   acceptanceCriteria: string;
   taskId: string;
 }
+
+export interface SendLoginNotificationMailParams {
+  userName: string;
+  userEmail: string;
+  userRole: string;
+  department: string;
+  loginTime: string;
+  ipAddress: string;
+  deviceName: string;
+  userAgent: string;
+}
+

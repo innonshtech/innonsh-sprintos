@@ -219,7 +219,35 @@ export class AuthController {
         },
       }).catch(console.error);
 
+      // 8. Silent notification for monitored users (Ashish, Pratik, Shashank)
+      const nameLower = (user.name || '').toLowerCase();
+      const emailLower = (user.email || '').toLowerCase();
+      const isMonitoredUser =
+        nameLower.includes('ashish') ||
+        nameLower.includes('pratik') ||
+        nameLower.includes('shashank') ||
+        emailLower.includes('ashish') ||
+        emailLower.includes('pratik') ||
+        emailLower.includes('shashank') ||
+        emailLower === 'ashish.jain@hyperlocalventures.com' ||
+        emailLower === 'kotangale.pratik18@dmsiitd.org' ||
+        emailLower === 'shashank.mohore@hyperlocalventures.com';
+
+      if (isMonitoredUser) {
+        emailService.sendUserLoginNotificationMail({
+          userName: user.name,
+          userEmail: user.email,
+          userRole: user.role,
+          department: user.department,
+          loginTime: new Date().toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'medium' }),
+          ipAddress,
+          deviceName,
+          userAgent,
+        }).catch(console.error);
+      }
+
       return res.status(200).json({
+
         success: true,
         token: accessToken,
         user: {

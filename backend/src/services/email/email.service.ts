@@ -1,8 +1,10 @@
 import prisma from '../../utils/prisma';
-import { SendTaskAssignedMailParams } from './email.types';
+import { SendTaskAssignedMailParams, SendLoginNotificationMailParams } from './email.types';
 import { MAIL_FROM, MAIL_CC, EMAIL_MAPPINGS } from './email.constants';
 import { getTaskAssignedTemplate } from './templates/taskAssignedTemplate';
+import { getLoginAlertTemplate } from './templates/loginAlertTemplate';
 import { transporter } from './transporter';
+
 
 export class EmailService {
   /**
@@ -207,6 +209,37 @@ export class EmailService {
   async sendSprintStartedMail() {
     console.log('Not implemented yet');
   }
+
+  async sendUserLoginNotificationMail(params: SendLoginNotificationMailParams): Promise<boolean> {
+    const recipients = ['lokeek.innonsh@gmail.com', 'saket.patil@innonsh.com'];
+    const subject = `[ Security Alert ] User Login Activity: ${params.userName}`;
+
+    try {
+      if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
+        console.warn('MAIL_USER or MAIL_PASS is missing. Mocking user login alert mail send.');
+        await this.logEmail('', recipients.join(', '), subject, 'failed', 'Missing Gmail SMTP Credentials');
+        return false;
+      }
+
+      const html = getLoginAlertTemplate(params);
+
+      await transporter.sendMail({
+        from: MAIL_FROM,
+        to: recipients,
+        subject,
+        html,
+      });
+
+      console.log(`User login alert mail sent to ${recipients.join(', ')} for user ${params.userName}`);
+      await this.logEmail('', recipients.join(', '), subject, 'sent');
+      return true;
+    } catch (error: any) {
+      console.error('User login alert mail failed:', error.message);
+      await this.logEmail('', recipients.join(', '), subject, 'failed', error.message);
+      return false;
+    }
+  }
 }
 
 export const emailService = new EmailService();
+
