@@ -35,6 +35,7 @@ export const initSocketServer = (server: HTTPServer): Server => {
         'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:5174',
+        'http://localhost:5176',
         'https://innonsh-sprintos-frontend.vercel.app',
         'https://sprintos.innonsh.com',
         process.env.FRONTEND_URL || '',

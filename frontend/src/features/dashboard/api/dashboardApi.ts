@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 
-export const useSprintHealth = (sprintId?: string) => {
+export const useSprintHealth = (sprintId?: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['dashboard', 'sprint-health', sprintId],
     queryFn: async () => {
@@ -9,11 +9,13 @@ export const useSprintHealth = (sprintId?: string) => {
       const response = await api.get(url);
       return response.data;
     },
+    enabled,
+    staleTime: 30000,
     refetchInterval: 60000, // Refresh every minute
   });
 };
 
-export const useTeamWorkload = (sprintId?: string) => {
+export const useTeamWorkload = (sprintId?: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['dashboard', 'team-workload', sprintId],
     queryFn: async () => {
@@ -21,11 +23,13 @@ export const useTeamWorkload = (sprintId?: string) => {
       const response = await api.get(url);
       return response.data;
     },
+    enabled,
+    staleTime: 30000,
     refetchInterval: 60000,
   });
 };
 
-export const useBoardSnapshot = (sprintId?: string) => {
+export const useBoardSnapshot = (sprintId?: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['dashboard', 'board-snapshot', sprintId],
     queryFn: async () => {
@@ -33,11 +37,13 @@ export const useBoardSnapshot = (sprintId?: string) => {
       const response = await api.get(url);
       return response.data;
     },
+    enabled,
+    staleTime: 30000,
     refetchInterval: 60000,
   });
 };
 
-export const useStandupMonitoring = (sprintId?: string) => {
+export const useStandupMonitoring = (sprintId?: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['dashboard', 'standup-monitoring', sprintId],
     queryFn: async () => {
@@ -45,11 +51,13 @@ export const useStandupMonitoring = (sprintId?: string) => {
       const response = await api.get(url);
       return response.data;
     },
+    enabled,
+    staleTime: 30000,
     refetchInterval: 60000,
   });
 };
 
-export const usePMSummary = (sprintId?: string) => {
+export const usePMSummary = (sprintId?: string, enabled: boolean = true) => {
   return useQuery({
     queryKey: ['dashboard', 'pm-summary', sprintId],
     queryFn: async () => {
@@ -57,6 +65,8 @@ export const usePMSummary = (sprintId?: string) => {
       const response = await api.get(url);
       return response.data;
     },
+    enabled,
+    staleTime: 30000,
     refetchInterval: 60000,
   });
 };

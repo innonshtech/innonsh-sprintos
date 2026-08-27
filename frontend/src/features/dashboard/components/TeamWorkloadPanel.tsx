@@ -21,9 +21,8 @@ export default function TeamWorkloadPanel({ workload, isLoading }: TeamWorkloadP
   const getMemberColor = (name: string) => {
     const n = name.toLowerCase();
     if (n.includes('lokeek')) return 'bg-blue-500';
-    if (n.includes('chetana')) return 'bg-orange-500';
-    if (n.includes('vaibhav')) return 'bg-emerald-500';
-    if (n.includes('aniket')) return 'bg-cyan-500';
+    if (n.includes('sanket')) return 'bg-indigo-500';
+    if (n.includes('shashank')) return 'bg-purple-500';
     
     // Fallback dynamic colors
     const colors = ['bg-indigo-500', 'bg-violet-500', 'bg-fuchsia-500', 'bg-rose-500'];

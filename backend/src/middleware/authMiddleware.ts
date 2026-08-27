@@ -7,6 +7,7 @@ declare global {
       user?: {
         id: string;
         role: string;
+        email?: string;
         sessionId?: string;
       };
     }
@@ -22,6 +23,7 @@ export const extractUserContext = (req: Request, res: Response, next: NextFuncti
       req.user = {
         id: decoded.userId,
         role: decoded.role,
+        email: decoded.email,
         sessionId: decoded.sessionId,
       };
     } catch (error) {

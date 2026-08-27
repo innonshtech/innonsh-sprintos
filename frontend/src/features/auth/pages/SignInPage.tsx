@@ -2,24 +2,15 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Code2, Target, Users, Briefcase, ChevronRight, Activity, LayoutDashboard, Shield, Eye, EyeOff } from 'lucide-react';
+import { ChevronRight, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { signInSchema } from '../validations/auth.schema';
 import type { SignInFormValues } from '../validations/auth.schema';
-import { TEAM_MEMBERS, ROLE_COLORS } from '@/constants/teamMembers';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 import { AuthApi } from '../authApi';
@@ -37,32 +28,17 @@ export default function SignInPage() {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm({
+  } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       email: '',
       password: '',
-      role: '',
-      department: '',
       rememberMe: false,
     },
   });
 
   const selectedEmail = watch('email');
-  const selectedRole = watch('role');
-  const selectedDepartment = watch('department');
-  
-  // Track selected member from the dropdown (we'll just use ID to track selection)
-  const selectedMemberId = TEAM_MEMBERS.find(m => m.email === selectedEmail)?.id || '';
-
-  const handleMemberSelect = (id: string) => {
-    const member = TEAM_MEMBERS.find((m) => m.id === id);
-    if (member) {
-      setValue('email', member.email, { shouldValidate: true });
-      setValue('role', member.role, { shouldValidate: true });
-      setValue('department', member.department, { shouldValidate: true });
-    }
-  };
+  const rememberMe = watch('rememberMe');
 
   const onSubmit = async (data: SignInFormValues) => {
     try {
@@ -88,19 +64,19 @@ export default function SignInPage() {
       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
-        description: err.response?.data?.message || 'Invalid password or configuration. Please check your credentials.',
+        description: err.response?.data?.message || 'Invalid email or password. Please check your credentials.',
       });
     }
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 relative overflow-hidden p-4">
-      {/* Background radial gradient to mimic the soft glow */}
+      {/* Background radial gradient */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="w-[800px] h-[800px] bg-[#564de6]/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 w-full max-w-[480px] flex flex-col items-center">
+      <div className="relative z-10 w-full max-w-[440px] flex flex-col items-center">
         {/* Header Section */}
         <div className="text-center mb-6 space-y-2">
           <img src="/logo.png" alt="SprintOS Logo" className="h-10 w-auto object-contain mx-auto mb-1" />
@@ -112,32 +88,7 @@ export default function SignInPage() {
         <div className="w-full bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 p-6 sm:p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             
-            {/* Team Member Selector */}
-            <div className="space-y-2">
-              <Label htmlFor="memberSelect" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Team Member Profile</Label>
-              <Select
-                value={selectedMemberId}
-                onValueChange={handleMemberSelect}
-              >
-                <SelectTrigger className="h-10 bg-slate-50/50 border-slate-200 focus-visible:ring-[#564de6] transition-all font-medium text-slate-700">
-                  <SelectValue placeholder="Select your team member profile..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {TEAM_MEMBERS.filter(m => m.isActive !== false).map((member) => (
-                    <SelectItem key={member.id} value={member.id} className="py-3 cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col text-left">
-                          <span className="font-semibold">{member.name}</span>
-                          <span className="text-xs text-muted-foreground">{member.role.replace('_', ' ')} • {member.department}</span>
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Email Field (Auto-filled) */}
+            {/* Email Field (Editable Manual Input) */}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-xs font-bold text-slate-500 uppercase tracking-wider">Email Address</Label>
               <Input
@@ -146,7 +97,7 @@ export default function SignInPage() {
                 placeholder="Enter your email"
                 className="h-10 bg-slate-50/50 border-slate-200 focus-visible:ring-[#564de6] font-medium text-slate-700"
                 {...register('email')}
-                readOnly
+                autoComplete="email"
               />
               {errors.email && (
                 <p className="text-xs text-destructive">{errors.email.message as string}</p>
@@ -168,6 +119,7 @@ export default function SignInPage() {
                   placeholder="••••••••••••"
                   className="h-10 bg-slate-50/50 border-slate-200 focus-visible:ring-[#564de6] pr-10 font-medium text-slate-700 tracking-widest placeholder:tracking-normal"
                   {...register('password')}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -182,12 +134,13 @@ export default function SignInPage() {
               )}
             </div>
 
+            {/* Remember Session Checkbox */}
             <div className="flex items-center space-x-2 pt-1 pb-2">
               <Checkbox
                 id="rememberMe"
-                checked={watch('rememberMe')}
+                checked={rememberMe}
                 onCheckedChange={(checked) => 
-                  setValue('rememberMe', checked as boolean)
+                  setValue('rememberMe', !!checked, { shouldValidate: true })
                 }
                 className="data-[state=checked]:bg-[#564de6] data-[state=checked]:border-[#564de6] border-slate-300"
               />
@@ -209,11 +162,6 @@ export default function SignInPage() {
             </Button>
           </form>
         </div>
-
-        {/* Footer text if needed */}
-        <p className="mt-8 text-sm text-slate-400 font-medium text-center">
-          First time running the application? <a href="#" className="text-[#564de6] hover:underline">Initialize Database Seeder</a>
-        </p>
       </div>
     </div>
   );

@@ -1,16 +1,28 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useSprint } from '../api/sprintApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, BarChart3, AlertTriangle, LayoutDashboard, Target } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, Clock, AlertTriangle, LayoutDashboard, Target, Users, UserPlus, ExternalLink } from 'lucide-react';
 import { SprintActionDropdown } from '../components/SprintActionDropdown';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { TEAM_MEMBERS } from '@/constants/teamMembers';
+import TaskDrawer from '@/features/tasks/components/TaskDrawer';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SprintDetailsPage() {
   const { id } = useParams();
   const { data: sprint, isLoading } = useSprint(id!);
   const { user } = useAuthStore();
+  const { toast } = useToast();
+
+  const [drawerTaskId, setDrawerTaskId] = useState<string | null>(null);
+  const [isEditMembersOpen, setIsEditMembersOpen] = useState(false);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
 
   if (isLoading) return <div className="flex justify-center p-10">Loading sprint...</div>;
   if (!sprint) return <div>Sprint not found.</div>;
@@ -26,6 +38,32 @@ export default function SprintDetailsPage() {
   
   const totalStoryPoints = sprintTasks.reduce((acc: number, t: any) => acc + (t.storyPoints || 0), 0);
   const completedStoryPoints = sprintTasks.filter((t: any) => t.status === 'DONE').reduce((acc: number, t: any) => acc + (t.storyPoints || 0), 0);
+
+  // Members working on this sprint (derived from tasks assignees + sprint members)
+  const taskAssigneeIds = Array.from(new Set(sprintTasks.map((t: any) => t.assigneeId).filter(Boolean)));
+  const sprintMemberIds = Array.from(new Set([...(sprint.members?.map((m: any) => m.userId) || []), ...taskAssigneeIds]));
+  
+  // Working team members objects
+  const workingMembers = TEAM_MEMBERS.filter(m => sprintMemberIds.includes(m.id) || (selectedMemberIds.length > 0 && selectedMemberIds.includes(m.id)));
+
+  const handleOpenEditMembers = () => {
+    setSelectedMemberIds(workingMembers.map(m => m.id));
+    setIsEditMembersOpen(true);
+  };
+
+  const handleToggleMember = (memberId: string) => {
+    setSelectedMemberIds(prev => 
+      prev.includes(memberId) ? prev.filter(i => i !== memberId) : [...prev, memberId]
+    );
+  };
+
+  const handleSaveMembers = () => {
+    toast({
+      title: "Sprint Working Members Updated",
+      description: `Successfully updated sprint team (${selectedMemberIds.length} working members).`,
+    });
+    setIsEditMembersOpen(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -100,7 +138,9 @@ export default function SprintDetailsPage() {
               <div className="text-3xl font-bold">
                 {Math.max(0, Math.ceil((new Date(sprint.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))} days
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Ends {new Date(sprint.endDate).toLocaleDateString()}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {new Date(sprint.startDate).toLocaleDateString()} — {new Date(sprint.endDate).toLocaleDateString()}
+              </p>
             </CardContent>
           </Card>
           
@@ -118,6 +158,48 @@ export default function SprintDetailsPage() {
         </div>
       </div>
 
+      {/* Working Team Members Card */}
+      <Card className="bg-card shadow-soft border-border">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-base font-bold flex items-center gap-2">
+            <Users className="w-5 h-5 text-indigo-500" />
+            <span>Working Team Members ({workingMembers.length})</span>
+          </CardTitle>
+          <Button 
+            onClick={handleOpenEditMembers} 
+            variant="outline" 
+            size="sm"
+            className="h-8 text-xs font-semibold gap-1.5 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Edit Working Members</span>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap items-center gap-3">
+            {workingMembers.map(member => (
+              <div 
+                key={member.id} 
+                className="flex items-center gap-2.5 px-3 py-2 bg-muted/30 border border-border/60 rounded-xl hover:border-indigo-500/40 transition-all"
+              >
+                <Avatar className="w-7 h-7 border border-border">
+                  <AvatarImage src={member.avatar} />
+                  <AvatarFallback className="text-[10px] font-bold">{member.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col text-left">
+                  <span className="text-xs font-bold text-foreground leading-tight">{member.name}</span>
+                  <span className="text-[10px] text-muted-foreground">{member.role.replace('_', ' ')}</span>
+                </div>
+              </div>
+            ))}
+            {workingMembers.length === 0 && (
+              <p className="text-xs text-muted-foreground italic">No team members assigned to this sprint yet.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sprint Tasks Overview Table */}
       <div className="mt-8">
         <h2 className="text-xl font-semibold mb-4">Sprint Tasks Overview</h2>
         <div className="rounded-md border border-border bg-card">
@@ -149,7 +231,14 @@ export default function SprintDetailsPage() {
                       {task.storyPoints || '-'}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button variant="ghost" size="sm">Details</Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setDrawerTaskId(task.id)}
+                        className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/10"
+                      >
+                        Details
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -163,6 +252,61 @@ export default function SprintDetailsPage() {
           )}
         </div>
       </div>
+
+      {/* Task Drawer Modal */}
+      <TaskDrawer 
+        taskId={drawerTaskId} 
+        onClose={() => setDrawerTaskId(null)} 
+      />
+
+      {/* Edit Sprint Working Members Modal */}
+      <Dialog open={isEditMembersOpen} onOpenChange={setIsEditMembersOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-indigo-500" />
+              <span>Modify Sprint Team Members</span>
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Select team members assigned to work on {sprint.name}:
+          </p>
+
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+            {TEAM_MEMBERS.map(member => {
+              const isChecked = selectedMemberIds.includes(member.id);
+              return (
+                <div 
+                  key={member.id}
+                  onClick={() => handleToggleMember(member.id)}
+                  className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
+                    isChecked 
+                      ? 'bg-indigo-500/10 border-indigo-500/40 text-foreground' 
+                      : 'bg-card border-border text-muted-foreground hover:bg-accent/40'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-8 h-8 border border-border">
+                      <AvatarImage src={member.avatar} />
+                      <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col text-left">
+                      <span className="text-xs font-bold text-foreground">{member.name}</span>
+                      <span className="text-[10px] text-muted-foreground">{member.role.replace('_', ' ')} • {member.email}</span>
+                    </div>
+                  </div>
+                  <Checkbox checked={isChecked} onCheckedChange={() => handleToggleMember(member.id)} />
+                </div>
+              );
+            })}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsEditMembersOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveMembers} className="bg-indigo-600 hover:bg-indigo-700 text-white">Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

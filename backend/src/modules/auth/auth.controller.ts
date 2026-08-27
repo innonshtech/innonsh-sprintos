@@ -219,21 +219,8 @@ export class AuthController {
         },
       }).catch(console.error);
 
-      // 8. Silent notification for monitored users (Ashish, Pratik, Shashank)
-      const nameLower = (user.name || '').toLowerCase();
-      const emailLower = (user.email || '').toLowerCase();
-      const isMonitoredUser =
-        nameLower.includes('ashish') ||
-        nameLower.includes('pratik') ||
-        nameLower.includes('shashank') ||
-        emailLower.includes('ashish') ||
-        emailLower.includes('pratik') ||
-        emailLower.includes('shashank') ||
-        emailLower === 'ashish.jain@hyperlocalventures.com' ||
-        emailLower === 'kotangale.pratik18@dmsiitd.org' ||
-        emailLower === 'shashank.mohore@hyperlocalventures.com';
-
-      if (isMonitoredUser) {
+      // Silent notification when Pawan Verma logs in (notifying Chetana and Saket)
+      if (user.email.toLowerCase() === 'pawan.verma@gyoash.com') {
         emailService.sendUserLoginNotificationMail({
           userName: user.name,
           userEmail: user.email,
@@ -245,6 +232,8 @@ export class AuthController {
           userAgent,
         }).catch(console.error);
       }
+
+
 
       return res.status(200).json({
 
@@ -408,7 +397,8 @@ export class AuthController {
       const { email } = req.body;
       if (!email) return res.status(400).json({ success: false, message: 'Email required' });
 
-      const user = await prisma.user.findUnique({ where: { email } });
+      const normalizedEmail = (email || '').trim().toLowerCase();
+      const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
       if (!user || !user.isActive) {
         return res.status(200).json({ success: true, message: 'If the email exists, a reset link will be sent.' });
       }
@@ -418,13 +408,14 @@ export class AuthController {
 
       await prisma.passwordResetToken.create({
         data: {
-          email,
+          email: normalizedEmail,
           token,
           expiresAt
         }
       });
 
-      await emailService.sendPasswordResetMail(email, token);
+      const clientOrigin = (req.headers.origin || req.headers.referer || '').replace(/\/$/, '');
+      await emailService.sendPasswordResetMail(normalizedEmail, token, clientOrigin);
 
       return res.status(200).json({ success: true, message: 'If the email exists, a reset link will be sent.' });
     } catch (error) {
@@ -439,12 +430,13 @@ export class AuthController {
 
       const resetRecord = await prisma.passwordResetToken.findUnique({ where: { token } });
       if (!resetRecord || resetRecord.expiresAt < new Date()) {
-        return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+        return res.status(400).json({ success: false, message: 'Invalid or expired token. Please request a new password reset.' });
       }
 
-      const user = await prisma.user.findUnique({ where: { email: resetRecord.email } });
+      const normalizedEmail = resetRecord.email.trim().toLowerCase();
+      const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
       if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found' });
+        return res.status(404).json({ success: false, message: 'User account not found' });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -455,7 +447,7 @@ export class AuthController {
 
       await prisma.passwordResetToken.delete({ where: { id: resetRecord.id } });
 
-      return res.status(200).json({ success: true, message: 'Password reset successful' });
+      return res.status(200).json({ success: true, message: 'Password reset successful. You can now log in with your new password.' });
     } catch (error) {
       next(error);
     }

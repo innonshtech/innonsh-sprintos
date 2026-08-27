@@ -73,17 +73,18 @@ export class ChatController {
       if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
       const channels = await ChatRepository.getChannelsForUser(userId);
+      if (!channels || channels.length === 0) return res.status(200).json([]);
       
       const channelsWithUnread = await Promise.all(
         channels.map(async (channel) => {
           const member = channel.members.find((m) => m.userId === userId);
           let unread = 0;
-          if (member) {
+          if (member?.lastSeenAt) {
             unread = await prisma.chatMessage.count({
               where: {
                 channelId: channel.id,
                 createdAt: {
-                  gt: member.lastSeenAt || new Date(0)
+                  gt: member.lastSeenAt
                 }
               }
             });

@@ -30,6 +30,7 @@ import CalendarPage from './pages/CalendarPage';
 import ChatPage from './features/chat/pages/ChatPage';
 import { TimesheetsPage } from './features/timesheets/pages/TimesheetsPage';
 import UserStoriesPage from './features/userStories/pages/UserStoriesPage';
+import GyoashHubPage from './features/gyoashHub/pages/GyoashHubPage';
 
 
 import { useState, useEffect } from 'react';
@@ -128,6 +129,7 @@ function App() {
               <Route path="standups" element={<StandupPage />} />
               <Route path="timesheets" element={<TimesheetsPage />} />
               <Route path="user-stories" element={<UserStoriesPage />} />
+              <Route path="gyoash-hub" element={<GyoashHubPage />} />
 
               
               {/* Product Manager Only Routes */}

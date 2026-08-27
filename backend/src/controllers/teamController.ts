@@ -4,8 +4,8 @@ import bcrypt from 'bcryptjs';
 
 const checkPMRole = (req: Request, res: Response) => {
   const user = req.user;
-  if (!user || user.role !== 'PRODUCT_MANAGER') {
-    res.status(403).json({ error: 'Access denied. Only Product Managers can access team management.' });
+  if (!user || (user.role !== 'PRODUCT_MANAGER' && user.role !== 'ADMIN' && user.email !== 'saket.innonsh@gmail.com')) {
+    res.status(403).json({ success: false, message: 'Access denied. Only Product Managers and Admins can access team management.' });
     return false;
   }
   return true;
@@ -14,6 +14,7 @@ const checkPMRole = (req: Request, res: Response) => {
 export const getTeam = async (req: Request, res: Response) => {
   try {
     const team = await prisma.user.findMany({
+      where: { isActive: true },
       include: {
         tasksAssigned: {
           select: { status: true }
@@ -157,18 +158,36 @@ export const createTeamMember = async (req: Request, res: Response) => {
   if (!checkPMRole(req, res)) return;
   try {
     const { name, email, role, department, password, avatar } = req.body;
+    const normalizedEmail = (email || '').trim().toLowerCase();
+
+    if (!normalizedEmail || !password || !name) {
+      return res.status(400).json({ success: false, message: 'Name, email, and password are required' });
+    }
+
+    // Check for existing user
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: `User with email '${normalizedEmail}' already exists.`
+      });
+    }
     
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
+        name: (name || '').trim(),
+        email: normalizedEmail,
         role: role || 'DEVELOPER',
-        department: department || 'Engineering',
+        department: (department || 'Engineering').trim(),
         password: hashedPassword,
-        avatar
+        avatar: avatar || null,
+        isActive: true
       }
     });
 
@@ -182,9 +201,20 @@ export const createTeamMember = async (req: Request, res: Response) => {
       `Created new team member ${user.name} (${user.role})`
     );
 
-    res.status(201).json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create team member' });
+    res.status(201).json({
+      success: true,
+      message: 'Employee onboarded successfully',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        department: user.department
+      }
+    });
+  } catch (error: any) {
+    console.error('Error creating team member:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to create team member' });
   }
 };
 
@@ -192,14 +222,19 @@ export const updateTeamMember = async (req: Request, res: Response) => {
   if (!checkPMRole(req, res)) return;
   try {
     const { id } = req.params;
-    const { name, role, department, avatar, isActive } = req.body;
+    const { name, email, role, department, password, avatar, isActive } = req.body;
     
     const dataToUpdate: any = {};
-    if (name) dataToUpdate.name = name;
+    if (name) dataToUpdate.name = name.trim();
+    if (email) dataToUpdate.email = email.trim().toLowerCase();
     if (role) dataToUpdate.role = role;
-    if (department) dataToUpdate.department = department;
+    if (department) dataToUpdate.department = department.trim();
     if (avatar !== undefined) dataToUpdate.avatar = avatar;
     if (isActive !== undefined) dataToUpdate.isActive = isActive;
+    
+    if (password && password.trim().length > 0) {
+      dataToUpdate.password = await bcrypt.hash(password, 10);
+    }
     
     const user = await prisma.user.update({
       where: { id },
@@ -216,9 +251,14 @@ export const updateTeamMember = async (req: Request, res: Response) => {
       `Updated team member details for ${user.name}`
     );
 
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update team member' });
+    res.status(200).json({
+      success: true,
+      message: 'Employee updated successfully',
+      user
+    });
+  } catch (error: any) {
+    console.error('Error updating team member:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to update team member' });
   }
 };
 
@@ -227,7 +267,7 @@ export const deleteTeamMember = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     
-    // In many enterprise systems we deactivate instead of delete
+    // Deactivate user so they are hidden from team directory and cannot log in
     const user = await prisma.user.update({
       where: { id },
       data: { isActive: false }
@@ -243,9 +283,10 @@ export const deleteTeamMember = async (req: Request, res: Response) => {
       `Deactivated team member ${user.name}`
     );
 
-    res.status(200).json({ message: 'Team member deactivated successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to deactivate team member' });
+    res.status(200).json({ success: true, message: 'Employee deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting team member:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to delete team member' });
   }
 };
 

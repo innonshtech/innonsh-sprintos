@@ -288,6 +288,7 @@ export const SprintCalendar: React.FC = () => {
         <FullCalendar
           plugins={[dayGridPlugin, timeGridPlugin]}
           initialView="dayGridMonth"
+          initialDate="2026-09-01"
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',

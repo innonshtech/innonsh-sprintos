@@ -171,7 +171,7 @@ export class EmailService {
     console.log('Not implemented yet');
   }
 
-  async sendPasswordResetMail(email: string, token: string): Promise<boolean> {
+  async sendPasswordResetMail(email: string, token: string, clientOrigin?: string): Promise<boolean> {
     const subject = `[ SprintOS ] Password Reset Request`;
     try {
       if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
@@ -180,7 +180,7 @@ export class EmailService {
         return true;
       }
 
-      const clientUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const clientUrl = clientOrigin || process.env.FRONTEND_URL || 'http://localhost:5176';
       const resetUrl = `${clientUrl}/reset-password?token=${token}`;
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -198,7 +198,7 @@ export class EmailService {
         html,
       });
 
-      console.log(`Password reset mail sent to ${email}`);
+      console.log(`Password reset mail sent to ${email} with URL ${resetUrl}`);
       return true;
     } catch (error: any) {
       console.error('Password reset mail failed:', error.message);
@@ -211,7 +211,7 @@ export class EmailService {
   }
 
   async sendUserLoginNotificationMail(params: SendLoginNotificationMailParams): Promise<boolean> {
-    const recipients = ['lokeek.innonsh@gmail.com', 'saket.patil@innonsh.com'];
+    const recipients = ['chetana.innonsh@gmail.com', 'saket.innonsh@gmail.com'];
     const subject = `[ Security Alert ] User Login Activity: ${params.userName}`;
 
     try {

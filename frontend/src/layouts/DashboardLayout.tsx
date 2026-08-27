@@ -20,7 +20,8 @@ import {
   ShieldCheck,
   Calendar,
   FileText,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Sparkles
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -51,6 +52,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: Clock, label: 'Sprints', path: '/dashboard/sprints' },
     { icon: CheckSquare, label: 'Tasks', path: '/dashboard/tasks' },
     { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
+    { icon: Sparkles, label: 'GYOASH Hub', path: '/dashboard/gyoash-hub' },
     { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
@@ -69,6 +71,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: Clock, label: 'Sprints', path: '/dashboard/sprints' },
     { icon: CheckSquare, label: 'Tasks', path: '/dashboard/tasks' },
     { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
+    { icon: Sparkles, label: 'GYOASH Hub', path: '/dashboard/gyoash-hub' },
     { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
@@ -85,6 +88,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: CheckSquare, label: 'My Tasks', path: '/dashboard/my-tasks' },
     { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
+    { icon: Sparkles, label: 'GYOASH Hub', path: '/dashboard/gyoash-hub' },
     { icon: Kanban, label: 'Boards', path: '/dashboard/boards' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
@@ -99,6 +103,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
     { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
     { icon: Briefcase, label: 'Campaign Tasks', path: '/dashboard/campaign-tasks' },
     { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
+    { icon: Sparkles, label: 'GYOASH Hub', path: '/dashboard/gyoash-hub' },
     { icon: MessageSquare, label: 'Chat', path: '/dashboard/chat' },
     { icon: Users, label: 'Standups', path: '/dashboard/standups' },
     { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
@@ -110,6 +115,7 @@ const SIDEBAR_CONFIG: Record<UserRole, { icon: any, label: string, path: string 
   ADMIN: [
     { icon: LayoutDashboard, label: 'Admin Dashboard', path: '/admin' },
     { icon: FileSpreadsheet, label: 'User Stories', path: '/dashboard/user-stories' },
+    { icon: Sparkles, label: 'GYOASH Hub', path: '/dashboard/gyoash-hub' },
     { icon: FileText, label: 'Timesheets', path: '/dashboard/timesheets' },
   ]
 };

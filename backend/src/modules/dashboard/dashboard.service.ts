@@ -30,15 +30,18 @@ export class DashboardService {
     const daysElapsed = Math.max(0, Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
     const daysRemaining = Math.max(0, totalDays - daysElapsed);
 
-    const blockedTasksRaw = await this.repo.getBlockedTasks(activeSprint.id);
-    const blockedTasks = blockedTasksRaw.map((t: any) => ({
-      id: t.id,
-      title: t.title,
-      assignee: t.assignee?.name || 'Unassigned',
-      blockerReason: t.blockers[0]?.description || 'Unknown reason',
-      severity: 'HIGH', // Can be dynamic based on Priority
-      timeBlocked: `${Math.ceil((today.getTime() - new Date(t.blockers[0]?.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days`
-    }));
+    const blockedTasksRaw = (activeSprint.tasks || []).filter((t: any) => t.blockers && t.blockers.some((b: any) => !b.isResolved));
+    const blockedTasks = blockedTasksRaw.map((t: any) => {
+      const activeBlocker = (t.blockers || []).find((b: any) => !b.isResolved) || t.blockers[0];
+      return {
+        id: t.id,
+        title: t.title,
+        assignee: t.assignee?.name || 'Unassigned',
+        blockerReason: activeBlocker?.description || 'Unknown reason',
+        severity: 'HIGH',
+        timeBlocked: activeBlocker ? `${Math.ceil((today.getTime() - new Date(activeBlocker.createdAt).getTime()) / (1000 * 60 * 60 * 24))} days` : '0 days'
+      };
+    });
 
     const overdueTasks = tasks.filter((t: any) => t.status !== 'DONE' && t.dueDate && new Date(t.dueDate) < today).length;
 
@@ -164,9 +167,12 @@ export class DashboardService {
   }
 
   async getPMSummary(sprintId?: string) {
-    const [activeSprint, members] = await Promise.all([
+    const [activeSprint, members, activeProjects, globalBlockers, totalActiveTasks] = await Promise.all([
       this.repo.getSprint(sprintId),
-      this.repo.getTeamMembers()
+      this.repo.getTeamMembers(),
+      this.repo.getActiveProjectsCount(),
+      this.repo.getGlobalBlockersCount(),
+      this.repo.getTotalActiveTasksCount()
     ]);
     
     if (!activeSprint) {
@@ -176,21 +182,18 @@ export class DashboardService {
         boardSnapshot: null,
         standups: [],
         kpis: {
-          activeProjects: 0,
-          totalActiveTasks: 0,
-          globalBlockers: 0,
+          activeProjects,
+          totalActiveTasks,
+          globalBlockers,
         }
       };
     }
 
-    const [health, workload, boardSnapshot, standups, activeProjects, globalBlockers, totalActiveTasks] = await Promise.all([
+    const [health, workload, boardSnapshot, standups] = await Promise.all([
       this.getSprintHealth(sprintId, activeSprint),
       this.getTeamWorkload(sprintId, activeSprint, members),
       this.getBoardSnapshot(sprintId, activeSprint),
-      this.getStandupMonitoring(sprintId, activeSprint, members),
-      this.repo.getActiveProjectsCount(),
-      this.repo.getGlobalBlockersCount(),
-      this.repo.getTotalActiveTasksCount()
+      this.getStandupMonitoring(sprintId, activeSprint, members)
     ]);
 
     return {

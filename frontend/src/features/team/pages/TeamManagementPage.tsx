@@ -6,6 +6,8 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { Button } from '@/components/ui/button';
 import OnboardEmployeeModal from '../components/OnboardEmployeeModal';
+import EditEmployeeModal from '../components/EditEmployeeModal';
+import DeleteEmployeeModal from '../components/DeleteEmployeeModal';
 import { 
   Users, 
   ShieldCheck, 
@@ -24,7 +26,9 @@ import {
   BarChart,
   Calendar,
   Settings,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { 
   useRolePermissions, 
@@ -71,6 +75,12 @@ export default function TeamManagementPage() {
   const [loading, setLoading] = useState(true);
   const [onboardModalOpen, setOnboardModalOpen] = useState(false);
 
+  // Edit and Delete Member States
+  const [editMember, setEditMember] = useState<any | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteMember, setDeleteMember] = useState<any | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   // Selected Role for Permission Editing
   const [selectedRole, setSelectedRole] = useState<UserRole>('DEVELOPER');
   const [rolePermissionsState, setRolePermissionsState] = useState<RolePermissionMap>(DEFAULT_ROLE_PERMISSIONS.DEVELOPER);
@@ -84,17 +94,18 @@ export default function TeamManagementPage() {
   const { data: dbPermissions = [], isLoading: isLoadingPermissions } = useRolePermissions();
   const updatePermissionsMutation = useUpdateRolePermissions();
 
+  const fetchTeam = async () => {
+    try {
+      const res = await api.get('/team');
+      setTeam(res.data);
+    } catch (error) {
+      console.error('Failed to fetch team data', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTeam = async () => {
-      try {
-        const res = await api.get('/team');
-        setTeam(res.data);
-      } catch (error) {
-        console.error('Failed to fetch team data', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchTeam();
   }, []);
 
@@ -179,18 +190,43 @@ export default function TeamManagementPage() {
         </div>
       </div>
 
-      <OnboardEmployeeModal open={onboardModalOpen} onOpenChange={setOnboardModalOpen} />
+      <OnboardEmployeeModal open={onboardModalOpen} onOpenChange={setOnboardModalOpen} onSuccess={fetchTeam} />
+      <EditEmployeeModal member={editMember} open={editModalOpen} onOpenChange={setEditModalOpen} onSuccess={fetchTeam} />
+      <DeleteEmployeeModal member={deleteMember} open={deleteModalOpen} onOpenChange={setDeleteModalOpen} onSuccess={fetchTeam} />
 
       {/* TAB 1: TEAM DIRECTORY */}
       {activeTab === 'directory' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {team.map((member) => (
             <Card key={member.id} className="relative overflow-hidden group hover:shadow-md transition-all border-border">
-              {/* Online Status Indicator */}
-              <div className={`absolute top-4 right-4 w-3 h-3 rounded-full ${member.isOnline ? 'bg-emerald-500' : 'bg-muted'} ring-2 ring-background`} />
+              {/* Top Controls Bar: Online Status & Action Buttons */}
+              <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5 z-10">
+                {isPM && (
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm p-1 rounded-lg border border-border shadow-xs">
+                    <button
+                      onClick={() => { setEditMember(member); setEditModalOpen(true); }}
+                      title="Edit Employee Details"
+                      className="p-1 rounded-md text-muted-foreground hover:text-indigo-600 hover:bg-indigo-500/10 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => { setDeleteMember(member); setDeleteModalOpen(true); }}
+                      title="Delete Employee"
+                      className="p-1 rounded-md text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10 transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+                <div 
+                  title={member.isOnline ? "Online" : "Offline"}
+                  className={`w-2.5 h-2.5 rounded-full ${member.isOnline ? 'bg-emerald-500' : 'bg-muted-foreground/30'} ring-2 ring-background`} 
+                />
+              </div>
               
               <CardHeader className="text-center pb-2 pt-6">
-                <CardTitle className="text-lg">{member.name}</CardTitle>
+                <CardTitle className="text-lg font-bold text-foreground">{member.name}</CardTitle>
                 <CardDescription className="flex justify-center items-center gap-2 mt-1">
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border ${ROLE_COLORS[member.role as UserRole] || ''}`}>
                     {member.role?.replace('_', ' ')}

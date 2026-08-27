@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const isPM = user?.role === 'PRODUCT_MANAGER';
 
   // DEV/MARKETING DATA
-  const { data: sprints = [] } = useSprints();
+  const { data: sprints = [], isLoading: isLoadingSprints } = useSprints();
 
   const activeSprints = sprints.filter((s: any) => s.status === 'ACTIVE');
 
@@ -44,7 +44,9 @@ export default function DashboardPage() {
     }
   }, [sprints, selectedSprintId]);
 
-  const { data: pmSummary, isLoading: isLoadingSummary } = usePMSummary(selectedSprintId);
+  // Don't fire pmSummary with empty string if sprints are still loading
+  const isQueryEnabled = !isLoadingSprints || !!selectedSprintId || sprints.length === 0;
+  const { data: pmSummary, isLoading: isLoadingSummary } = usePMSummary(selectedSprintId, isQueryEnabled);
 
   // Derived KPIs for PM
   const activeProjectsCount = pmSummary?.kpis?.activeProjects || 0;

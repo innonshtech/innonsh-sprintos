@@ -724,7 +724,7 @@ export default function UserStoriesPage() {
                             {col.key === 'userStoryExpectedOutput' || col.key === 'scenarioName' ? (
                               <textarea
                                 autoFocus
-                                rows={2}
+                                rows={4}
                                 value={cellValue}
                                 onChange={(e) => setCellValue(e.target.value)}
                                 className="flex-1 bg-background border border-indigo-500 rounded p-1.5 text-xs text-foreground focus:outline-none"
@@ -759,6 +759,38 @@ export default function UserStoriesPage() {
                             >
                               <X className="w-3.5 h-3.5" />
                             </button>
+                          </div>
+                        ) : col.key === 'userStoryExpectedOutput' ? (
+                          <div className="flex flex-col gap-2 leading-relaxed">
+                            {(() => {
+                              const parts = value.split('Key Criteria:');
+                              const desc = parts[0]?.trim();
+                              const criteriaText = parts[1]?.trim();
+                              const criteriaList = criteriaText ? criteriaText.split('•').map(c => c.trim()).filter(Boolean) : [];
+
+                              return (
+                                <>
+                                  <p className="text-xs font-normal text-foreground leading-relaxed">
+                                    {desc || value}
+                                  </p>
+                                  {criteriaList.length > 0 && (
+                                    <div className="mt-1 bg-slate-50 dark:bg-slate-900/60 p-2 rounded-lg border border-slate-200/60 dark:border-slate-800">
+                                      <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block mb-1">
+                                        Acceptance Criteria:
+                                      </span>
+                                      <ul className="space-y-1">
+                                        {criteriaList.map((item, cIdx) => (
+                                          <li key={cIdx} className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                                            <Check className="w-3 h-3 text-emerald-500 flex-shrink-0 mt-0.5" />
+                                            <span>{item}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <div className="flex items-center justify-between group-hover/cell:pr-1">
