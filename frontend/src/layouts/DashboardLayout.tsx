@@ -40,6 +40,7 @@ import { ROLE_COLORS } from '@/constants/teamMembers';
 import type { UserRole } from '@/types/user';
 import { GlobalSearchBar } from '@/features/search/GlobalSearchBar';
 import { useChannels } from '@/features/chat/api/chatApi';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 import { useRolePermissions, DEFAULT_ROLE_PERMISSIONS } from '@/features/team/api/rolePermissionsApi';
 import type { SidebarFeatureKey } from '@/features/team/api/rolePermissionsApi';
@@ -351,10 +352,10 @@ export default function DashboardLayout() {
             </DropdownMenu>
 
             <DropdownMenu>
-              <DropdownMenuTrigger className="focus:outline-none">
+              <DropdownMenuTrigger className="focus:outline-none group">
                 <div className="flex items-center gap-3">
                   <div className="hidden text-right md:flex flex-col items-end">
-                    <p className="text-sm font-semibold leading-none mb-1.5">{user?.name}</p>
+                    <p className="text-sm font-semibold leading-none mb-1.5 group-hover:text-indigo-600 transition-colors">{user?.name}</p>
                     <div className="flex items-center gap-1.5">
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider border ${user ? ROLE_COLORS[user.role] : ''}`}>
                         {user?.role?.replace('_', ' ')}
@@ -362,6 +363,12 @@ export default function DashboardLayout() {
                       <span className="text-[10px] font-medium text-muted-foreground uppercase">{user?.department}</span>
                     </div>
                   </div>
+                  <Avatar className="w-9 h-9 ring-2 ring-indigo-500/20 shadow-xs group-hover:ring-indigo-500/50 transition-all cursor-pointer">
+                    <AvatarImage src={user?.avatar} alt={user?.name || 'User Profile'} />
+                    <AvatarFallback className="bg-indigo-600 text-white font-bold text-xs">
+                      {user?.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
+                    </AvatarFallback>
+                  </Avatar>
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
