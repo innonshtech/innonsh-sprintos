@@ -6,6 +6,8 @@ import { SessionService } from './session.service';
 import { emailService } from '../../services/email/email.service';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import cloudinary from '../../utils/cloudinary';
+import streamifier from 'streamifier';
 
 const COOKIE_SECURE = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
 const COOKIE_SAME_SITE = (process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL)) ? 'none' : 'lax';
@@ -471,6 +473,81 @@ export class AuthController {
       });
 
       return res.status(200).json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async uploadAvatar(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+      if (!req.file) return res.status(400).json({ success: false, message: 'No image file uploaded' });
+
+      const uploadResult: any = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'sprintos/avatars', resource_type: 'image' },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        streamifier.createReadStream(req.file!.buffer).pipe(stream);
+      });
+
+      const avatarUrl = uploadResult.secure_url;
+
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: { avatar: avatarUrl },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          department: true,
+          avatar: true,
+          isActive: true
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Avatar uploaded successfully',
+        avatar: avatarUrl,
+        user: updatedUser
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async updateProfile(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+      const { name, department } = req.body;
+
+      const updatedUser = await prisma.user.update({
+        where: { id: req.user.id },
+        data: {
+          ...(name && { name }),
+          ...(department && { department }),
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          department: true,
+          avatar: true,
+          isActive: true
+        }
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Profile updated successfully',
+        user: updatedUser
+      });
     } catch (error) {
       next(error);
     }

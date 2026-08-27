@@ -76,7 +76,14 @@ async function seedGyoashData() {
     skipDuplicates: true
   });
 
-  // 4. Create Sprints (Sept 1, 2026 Start Date, 2-Week Duration each)
+  // 4. CLEANUP OLD SPRINTS, TASKS & SPRINT MEMBERS
+  console.log('🧹 Cleaning up old tasks, sprint members & duplicate sprints...');
+  await prisma.task.deleteMany({ where: { projectId: project.id } });
+  await prisma.sprintMember.deleteMany({ where: { sprint: { projectId: project.id } } });
+  await prisma.sprint.deleteMany({ where: { projectId: project.id } });
+  await prisma.userStory.deleteMany({});
+
+  // 5. Create Exactly 6 Sprints (Sept 1, 2026 Start Date, 2-Week Duration each)
   const sprintMap: Record<string, any> = {};
   const sprintDates = [
     { id: 's1', name: 'Sprint 1 — Foundation', start: '2026-09-01', end: '2026-09-14', goal: 'Foundation & Login & License Setup' },
@@ -113,14 +120,10 @@ async function seedGyoashData() {
       skipDuplicates: true
     });
   }
-  console.log(`✅ 6 Sprints created starting Sept 1, 2026.`);
+  console.log(`✅ Exactly 6 unique Sprints created starting Sept 1, 2026.`);
 
-  // 5. Clear old User Stories & Tasks
-  await prisma.task.deleteMany({ where: { projectId: project.id } });
-  await prisma.userStory.deleteMany({});
-
-  // 6. Create Tasks & User Story Specification Sheet rows for all 98 stories
-  console.log(`⏳ Seeding ${rawStories.length} User Stories & Tasks with balanced Kanban statuses...`);
+  // 6. Create Tasks & User Story Specification Sheet rows initialized strictly to TODO / BACKLOG
+  console.log(`⏳ Seeding ${rawStories.length} User Stories & Tasks initialized to TODO status...`);
 
   const userStorySheetData: any[] = [];
   const tasksToCreate: any[] = [];
@@ -137,33 +140,9 @@ async function seedGyoashData() {
     // Priority
     const priority = (numInt % 7 === 0) ? TaskPriority.URGENT : (numInt % 3 === 0) ? TaskPriority.HIGH : TaskPriority.MEDIUM;
 
-    // Realistic Kanban Status Distribution across columns
-    let status: TaskStatus = TaskStatus.TODO;
-    let itStatus = 'BACKLOG';
-
-    if (story.sprintId === 's1') {
-      if (numInt <= 4) {
-        status = TaskStatus.DONE;
-        itStatus = 'DEPLOYED';
-      } else if (numInt <= 8) {
-        status = TaskStatus.IN_REVIEW;
-        itStatus = 'TESTING';
-      } else if (numInt <= 12) {
-        status = TaskStatus.IN_PROGRESS;
-        itStatus = 'IN_DEVELOPMENT';
-      } else {
-        status = TaskStatus.TODO;
-        itStatus = 'BACKLOG';
-      }
-    } else if (story.sprintId === 's2') {
-      if (numInt % 3 === 0) {
-        status = TaskStatus.IN_PROGRESS;
-        itStatus = 'IN_DEVELOPMENT';
-      } else {
-        status = TaskStatus.TODO;
-        itStatus = 'BACKLOG';
-      }
-    }
+    // All tasks initialize to TODO status since sprints start Sept 1, 2026
+    const status: TaskStatus = TaskStatus.TODO;
+    const itStatus = 'BACKLOG';
 
     // Task record
     tasksToCreate.push({
@@ -213,7 +192,7 @@ async function seedGyoashData() {
     data: userStorySheetData
   });
 
-  console.log(`🎉 Successfully seeded ${tasksToCreate.length} tasks & ${userStorySheetData.length} User Story specification rows!`);
+  console.log(`🎉 Successfully seeded ${tasksToCreate.length} tasks & ${userStorySheetData.length} User Story specification rows (All initialized to TODO / BACKLOG)!`);
 }
 
 seedGyoashData()

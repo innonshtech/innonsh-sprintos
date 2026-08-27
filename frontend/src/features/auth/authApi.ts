@@ -50,4 +50,18 @@ export class AuthApi {
     const response = await api.post('/auth/change-password', { oldPassword, newPassword });
     return response.data;
   }
+
+  static async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const response = await api.post('/auth/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  static async updateProfile(data: { name?: string; department?: string }) {
+    const response = await api.put('/auth/profile', data);
+    return response.data;
+  }
 }
