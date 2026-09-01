@@ -28,8 +28,17 @@ export default function TaskListPage() {
   // Filter tasks based on user role
   const isPM = user?.role === 'PRODUCT_MANAGER';
   
+  const [sortField, setSortField] = useState<'key' | 'title' | 'status' | 'priority'>('key');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  const getKeyNum = (key?: string) => {
+    if (!key) return 0;
+    const num = parseInt(key.replace(/^[^\d]*/, ''), 10);
+    return isNaN(num) ? 0 : num;
+  };
+
   const visibleTasks = useMemo(() => {
-    return tasks.filter((t: any) => {
+    const filtered = tasks.filter((t: any) => {
       // Role permission check
       if (!isPM && t.assigneeId !== user?.id) return false;
 
@@ -62,7 +71,22 @@ export default function TaskListPage() {
 
       return true;
     });
-  }, [tasks, search, isPM, user, advancedFilters]);
+
+    return filtered.sort((a: any, b: any) => {
+      let comparison = 0;
+      if (sortField === 'key') {
+        comparison = getKeyNum(a.key) - getKeyNum(b.key);
+      } else if (sortField === 'title') {
+        comparison = a.title.localeCompare(b.title);
+      } else if (sortField === 'status') {
+        comparison = (a.status || '').localeCompare(b.status || '');
+      } else if (sortField === 'priority') {
+        const priorityOrder: Record<string, number> = { CRITICAL: 5, URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+        comparison = (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }, [tasks, search, isPM, user, advancedFilters, sortField, sortOrder]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -112,13 +136,45 @@ export default function TaskListPage() {
       <div className="rounded-md border border-border bg-card">
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border">
+            <thead className="text-xs text-muted-foreground uppercase bg-muted/50 border-b border-border select-none">
               <tr>
-                <th className="px-6 py-4 font-medium w-16">Key</th>
-                <th className="px-6 py-4 font-medium">Title</th>
+                <th 
+                  className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
+                  onClick={() => {
+                    if (sortField === 'key') setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                    else { setSortField('key'); setSortOrder('asc'); }
+                  }}
+                >
+                  Key {sortField === 'key' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                </th>
+                <th 
+                  className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
+                  onClick={() => {
+                    if (sortField === 'title') setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                    else { setSortField('title'); setSortOrder('asc'); }
+                  }}
+                >
+                  Title {sortField === 'title' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                </th>
                 <th className="px-6 py-4 font-medium">Project</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium">Priority</th>
+                <th 
+                  className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
+                  onClick={() => {
+                    if (sortField === 'status') setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                    else { setSortField('status'); setSortOrder('asc'); }
+                  }}
+                >
+                  Status {sortField === 'status' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                </th>
+                <th 
+                  className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
+                  onClick={() => {
+                    if (sortField === 'priority') setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                    else { setSortField('priority'); setSortOrder('asc'); }
+                  }}
+                >
+                  Priority {sortField === 'priority' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                </th>
                 <th className="px-6 py-4 font-medium">Assignee</th>
               </tr>
             </thead>

@@ -7,7 +7,7 @@ export const HARDCODED_USERS = [
     password: 'Admin@123',
     role: 'SUPER_ADMIN' as Role,
     name: 'Nikhil (Super Admin)',
-    avatarUrl: 'https://i.pravatar.cc/150?u=admin',
+    avatarUrl: undefined,
   },
   {
     id: 'u_2',
@@ -15,7 +15,7 @@ export const HARDCODED_USERS = [
     password: 'PM@123',
     role: 'PRODUCT_MANAGER' as Role,
     name: 'Sarah (Product Manager)',
-    avatarUrl: 'https://i.pravatar.cc/150?u=pm',
+    avatarUrl: undefined,
   },
   {
     id: 'u_3',
@@ -23,7 +23,7 @@ export const HARDCODED_USERS = [
     password: 'Lead@123',
     role: 'TEAM_LEAD' as Role,
     name: 'David (Team Lead)',
-    avatarUrl: 'https://i.pravatar.cc/150?u=lead',
+    avatarUrl: undefined,
   },
   {
     id: 'u_4',
@@ -31,7 +31,7 @@ export const HARDCODED_USERS = [
     password: 'Dev@123',
     role: 'DEVELOPER' as Role,
     name: 'Alex (Developer)',
-    avatarUrl: 'https://i.pravatar.cc/150?u=dev',
+    avatarUrl: undefined,
   },
   {
     id: 'u_5',
@@ -39,6 +39,6 @@ export const HARDCODED_USERS = [
     password: 'HR@123',
     role: 'HR' as Role,
     name: 'Jessica (HR)',
-    avatarUrl: 'https://i.pravatar.cc/150?u=hr',
+    avatarUrl: undefined,
   },
 ];

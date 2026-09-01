@@ -21,7 +21,7 @@ export const getTasks = async (req: Request, res: Response) => {
     
     query.isArchived = isArchived === 'true';
 
-    const tasks = await prisma.task.findMany({
+    const rawTasks = await prisma.task.findMany({
       where: query,
       include: {
         assignee: true,
@@ -30,9 +30,16 @@ export const getTasks = async (req: Request, res: Response) => {
         blockers: {
           where: { isResolved: false }
         }
-      },
-      orderBy: { createdAt: 'desc' }
+      }
     });
+
+    const getKeyNum = (key?: string) => {
+      if (!key) return 0;
+      const num = parseInt(key.replace(/^[^\d]*/, ''), 10);
+      return isNaN(num) ? 0 : num;
+    };
+
+    const tasks = rawTasks.sort((a, b) => getKeyNum(a.key) - getKeyNum(b.key));
     
     res.status(200).json(tasks);
   } catch (error) {

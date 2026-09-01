@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useTeam } from '@/features/team/api/teamApi';
+import { TEAM_MEMBERS } from '@/constants/teamMembers';
 import { Paperclip, X } from 'lucide-react';
 
 interface CreateTaskModalProps {
@@ -28,7 +29,13 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
   const addAttachment = useAddAttachment();
   const { toast } = useToast();
   const { data: projects = [] } = useProjects();
-  const { data: teamMembers = [] } = useTeam();
+  const { data: rawTeamMembers = [] } = useTeam();
+  const teamMembers = rawTeamMembers.length > 0 ? rawTeamMembers : TEAM_MEMBERS;
+  const EXCLUDED_ASSIGNABLE_NAMES = ['shashank', 'aman', 'nikheel', 'saket', 'pawan'];
+  const assignableTeamMembers = teamMembers.filter((m: any) => {
+    const nameLower = (m.name || '').toLowerCase();
+    return !EXCLUDED_ASSIGNABLE_NAMES.some(ex => nameLower.includes(ex));
+  });
   
   const [projectId, setProjectId] = useState(defaultProjectId || '');
   const { data: sprints = [] } = useSprints(projectId);
@@ -216,8 +223,8 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">Unassigned</SelectItem>
-                {teamMembers.map((m: any) => (
-                  <SelectItem key={m.id} value={m.id}>{m.name} ({m.role})</SelectItem>
+                {assignableTeamMembers.map((m: any) => (
+                  <SelectItem key={m.id} value={m.id}>{m.name} ({m.role.replace('_', ' ')})</SelectItem>
                 ))}
               </SelectContent>
             </Select>

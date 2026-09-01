@@ -22,7 +22,7 @@ import MemberDashboard from '@/features/dashboard/member/MemberDashboard';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const isPM = user?.role === 'PRODUCT_MANAGER';
+  const isExecutiveOrPM = ['PRODUCT_MANAGER', 'PRODUCT_OWNER', 'ADMIN'].includes(user?.role || '');
 
   // DEV/MARKETING DATA
   const { data: sprints = [], isLoading: isLoadingSprints } = useSprints();
@@ -67,7 +67,7 @@ export default function DashboardPage() {
               </span>
             )}
             
-            {isPM && sprints.length > 0 && (
+            {isExecutiveOrPM && sprints.length > 0 && (
               <div className="ml-2 flex items-center">
                 <Select value={selectedSprintId} onValueChange={setSelectedSprintId}>
                   <SelectTrigger className="w-[200px] h-8 bg-card border-indigo-200 shadow-soft">
@@ -90,7 +90,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {isPM ? (
+      {isExecutiveOrPM ? (
         // ==========================================
         // PRODUCT MANAGER COMMAND CENTER LAYOUT
         // ==========================================

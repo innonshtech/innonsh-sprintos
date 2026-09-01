@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useTask, useUpdateTaskStatus, useAddSubtask, useUpdateSubtask, useArchiveTask, useRestoreTask, useDeleteTask, useResolveBlocker } from '../api/taskApi';
+import { useTask, useUpdateTask, useUpdateTaskStatus, useAddSubtask, useUpdateSubtask, useArchiveTask, useRestoreTask, useDeleteTask, useResolveBlocker } from '../api/taskApi';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { useTeam } from '@/features/team/api/teamApi';
 import { useToast } from '@/hooks/use-toast';
 import { TEAM_MEMBERS } from '@/constants/teamMembers';
 import { 
@@ -26,7 +27,8 @@ import {
   Trash,
   Archive,
   RefreshCw,
-  CheckCircle
+  CheckCircle,
+  UserCheck
 } from 'lucide-react';
 import TaskComments from './TaskComments';
 import TaskActivityTimeline from './TaskActivityTimeline';
@@ -40,6 +42,8 @@ interface TaskDrawerProps {
 
 export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const { data: task, isLoading } = useTask(taskId);
+  const { data: realTeamMembers = [] } = useTeam();
+  const updateTask = useUpdateTask();
   const updateTaskStatus = useUpdateTaskStatus();
   const addSubtask = useAddSubtask();
   const updateSubtask = useUpdateSubtask();
@@ -63,8 +67,14 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
 
   const project = task.project;
   const sprint = task.sprint;
-  const assignee = TEAM_MEMBERS.find(m => m.id === task.assigneeId);
-  const reporter = TEAM_MEMBERS.find(m => m.id === task.creatorId);
+  const availableMembers = realTeamMembers.length > 0 ? realTeamMembers : TEAM_MEMBERS;
+  const EXCLUDED_ASSIGNABLE_NAMES = ['shashank', 'aman', 'nikheel', 'saket', 'pawan'];
+  const assignableMembers = availableMembers.filter((m: any) => {
+    const nameLower = (m.name || '').toLowerCase();
+    return !EXCLUDED_ASSIGNABLE_NAMES.some(ex => nameLower.includes(ex));
+  });
+  const assignee = task.assignee || availableMembers.find((m: any) => m.id === task.assigneeId) || TEAM_MEMBERS.find(m => m.id === task.assigneeId);
+  const reporter = task.creator || availableMembers.find((m: any) => m.id === task.creatorId) || TEAM_MEMBERS.find(m => m.id === task.creatorId);
   const blocker = task.blockers?.find((b: any) => !b.isResolved);
 
   const canEdit = user?.role === 'PRODUCT_MANAGER' || user?.id === task.assigneeId;
@@ -347,16 +357,39 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   <div>
                     <span className="text-xs text-muted-foreground block mb-1.5">Assignee</span>
                     <div className="flex items-center gap-2">
-                      {assignee ? (
-                        <>
-                          <Avatar className={`w-7 h-7 border-2 ${assignee.color ? `border-${assignee.color}-500` : 'border-border'}`}>
-                            <AvatarImage src={assignee.avatar} />
-                            <AvatarFallback className="text-[10px]">{assignee.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm font-medium">{assignee.name}</span>
-                        </>
+                      {assignee && (
+                        <Avatar className={`w-7 h-7 border-2 shrink-0 ${assignee.color ? `border-${assignee.color}-500` : 'border-border'}`}>
+                          <AvatarImage src={assignee.avatar} />
+                          <AvatarFallback className="text-[10px]">{assignee.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                      )}
+                      
+                      {canEdit ? (
+                        <select
+                          className="w-full text-xs border rounded-md px-2.5 py-1.5 bg-background font-medium focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                          value={task.assigneeId || ''}
+                          onChange={(e) => {
+                            const newAssigneeId = e.target.value || null;
+                            updateTask.mutate({ id: task.id, assigneeId: newAssigneeId }, {
+                              onSuccess: () => {
+                                const newMember = availableMembers.find((m: any) => m.id === newAssigneeId);
+                                toast({
+                                  title: 'Assignee Updated',
+                                  description: newMember ? `Assigned task to ${newMember.name}` : 'Task set to Unassigned'
+                                });
+                              }
+                            });
+                          }}
+                        >
+                          <option value="">Unassigned</option>
+                          {assignableMembers.map((m: any) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} ({m.role.replace('_', ' ')})
+                            </option>
+                          ))}
+                        </select>
                       ) : (
-                        <span className="text-sm text-muted-foreground italic">Unassigned</span>
+                        <span className="text-sm font-medium">{assignee?.name || 'Unassigned'}</span>
                       )}
                     </div>
                   </div>
