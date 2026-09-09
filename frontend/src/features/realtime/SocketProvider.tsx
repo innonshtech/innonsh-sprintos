@@ -1,11 +1,20 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../auth/store/authStore';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabaseClient';
+import type { RealtimeChannel } from '@supabase/supabase-js';
+
+export interface CustomSocket {
+  connected: boolean;
+  id: string;
+  on: (event: string, callback: (...args: any[]) => void) => void;
+  off: (event: string, callback?: (...args: any[]) => void) => void;
+  emit: (event: string, payload?: any, callback?: (...args: any[]) => void) => void;
+}
 
 interface SocketContextType {
-  socket: Socket | null;
+  socket: CustomSocket | null;
   joinProject: (projectId: string) => void;
   leaveProject: (projectId: string) => void;
 }
@@ -18,61 +27,168 @@ const SocketContext = createContext<SocketContextType>({
 
 export const useSocket = () => useContext(SocketContext);
 
-const BACKEND_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1').replace('/api/v1', '');
-
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const socketRef = useRef<Socket | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const { isAuthenticated, token } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const [socket, setSocket] = useState<CustomSocket | null>(null);
+
+  const listenersRef = useRef<Map<string, Set<(...args: any[]) => void>>>(new Map());
+  const globalChannelRef = useRef<RealtimeChannel | null>(null);
+  const activeRoomChannelsRef = useRef<Map<string, RealtimeChannel>>(new Map());
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
+    if (!isAuthenticated || !user) {
+      if (globalChannelRef.current) {
+        supabase.removeChannel(globalChannelRef.current);
+        globalChannelRef.current = null;
       }
+      activeRoomChannelsRef.current.forEach((ch) => supabase.removeChannel(ch));
+      activeRoomChannelsRef.current.clear();
+      setSocket(null);
       return;
     }
 
-    // Establish WebSocket Connection
-    const socket = io(BACKEND_URL, {
-      withCredentials: true,
-      transports: ['websocket', 'polling'],
-      auth: {
-        token,
+    const listeners = listenersRef.current;
+
+    const emitToListeners = (event: string, data: any) => {
+      const handlers = listeners.get(event);
+      if (handlers) {
+        handlers.forEach((fn) => {
+          try {
+            fn(data);
+          } catch (err) {
+            console.error(`Error in realtime handler for event ${event}:`, err);
+          }
+        });
+      }
+    };
+
+    // Create primary global realtime channel
+    const globalChannel = supabase.channel('sprintos-global', {
+      config: {
+        broadcast: { self: true },
+        presence: { key: user.id },
       },
-      query: {
-        token: token || '',
+    });
+
+    globalChannelRef.current = globalChannel;
+
+    // Listen to broadcast events
+    globalChannel.on('broadcast', { event: '*' }, (payload) => {
+      const eventName = payload.event;
+      const data = payload.payload;
+      emitToListeners(eventName, data);
+    });
+
+    // Listen to presence events
+    globalChannel.on('presence', { event: 'sync' }, () => {
+      const state = globalChannel.presenceState();
+      const presences: Record<string, string> = {};
+      Object.keys(state).forEach((userId) => {
+        presences[userId] = 'ONLINE';
+      });
+      emitToListeners('presence:init', presences);
+    });
+
+    globalChannel.on('presence', { event: 'join' }, ({ key }) => {
+      emitToListeners('presence:update', { userId: key, status: 'ONLINE' });
+    });
+
+    globalChannel.on('presence', { event: 'leave' }, ({ key }) => {
+      emitToListeners('presence:update', { userId: key, status: 'OFFLINE' });
+    });
+
+    // User personal notification channel
+    const userChannel = supabase.channel(`user:${user.id}`, {
+      config: { broadcast: { self: true } },
+    });
+    userChannel.on('broadcast', { event: '*' }, (payload) => {
+      emitToListeners(payload.event, payload.payload);
+    });
+
+    globalChannel.subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        console.log('⚡ Connected to SprintOS Real-Time Engine via Supabase Realtime');
+        await globalChannel.track({ userId: user.id, name: user.name, status: 'ONLINE' });
+      }
+    });
+
+    userChannel.subscribe();
+
+    // Adapter socket interface for existing components
+    const socketAdapter: CustomSocket = {
+      connected: true,
+      id: user.id,
+      on: (event: string, callback: (...args: any[]) => void) => {
+        if (!listeners.has(event)) {
+          listeners.set(event, new Set());
+        }
+        listeners.get(event)!.add(callback);
       },
-    });
+      off: (event: string, callback?: (...args: any[]) => void) => {
+        if (!callback) {
+          listeners.delete(event);
+        } else {
+          listeners.get(event)?.delete(callback);
+        }
+      },
+      emit: (event: string, payload?: any, callback?: (...args: any[]) => void) => {
+        // Handle custom client socket triggers
+        if (event === 'chat:room:join') {
+          const channelId = payload?.channelId;
+          if (channelId) {
+            const roomTopic = `chat:room:${channelId}`;
+            if (!activeRoomChannelsRef.current.has(channelId)) {
+              const roomChannel = supabase.channel(roomTopic, {
+                config: { broadcast: { self: true } },
+              });
+              roomChannel.on('broadcast', { event: '*' }, (p) => {
+                emitToListeners(p.event, p.payload);
+              });
+              roomChannel.subscribe();
+              activeRoomChannelsRef.current.set(channelId, roomChannel);
+            }
+          }
+          if (callback) callback({ success: true });
+        } else if (event === 'chat:room:leave') {
+          const channelId = payload?.channelId;
+          if (channelId && activeRoomChannelsRef.current.has(channelId)) {
+            const roomChannel = activeRoomChannelsRef.current.get(channelId)!;
+            supabase.removeChannel(roomChannel);
+            activeRoomChannelsRef.current.delete(channelId);
+          }
+        } else if (event === 'presence:get') {
+          const state = globalChannel.presenceState();
+          const presences: Record<string, string> = {};
+          Object.keys(state).forEach((uid) => {
+            presences[uid] = 'ONLINE';
+          });
+          emitToListeners('presence:init', presences);
+          if (callback) callback({ success: true, presences });
+        } else {
+          // Broadcast to global channel
+          globalChannel.send({
+            type: 'broadcast',
+            event,
+            payload: payload || {},
+          });
+          if (callback) callback({ success: true });
+        }
+      },
+    };
 
-    socketRef.current = socket;
+    setSocket(socketAdapter);
 
-    socket.on('connect', () => {
-      console.log('⚡ Connected to SprintOS Real-Time Engine (Socket ID:', socket.id, ')');
-    });
-
-    socket.on('disconnect', () => {
-      console.log('🔌 Disconnected from SprintOS Real-Time Engine');
-    });
-
-    socket.on('connect_error', (error) => {
-      console.warn('⚠️ Real-Time connection error:', error.message);
-    });
-
-    // 1. Task Updates Event
-    socket.on('task:updated', (data: { action: string; taskId: string; projectId: string }) => {
-      console.log('🔄 Live task update:', data);
+    // Global Event Handlers for UI invalidate triggers
+    const handleTaskUpdated = (data: { action: string; taskId: string; projectId: string }) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       if (data.taskId) {
         queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
       }
-    });
+    };
 
-    // 2. Blocker Added Event
-    socket.on('blocker:added', (data: { blocker: any; projectId: string; taskId: string }) => {
-      console.log('⚠️ Live blocker added:', data);
+    const handleBlockerAdded = (data: { blocker: any; projectId: string; taskId: string }) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       if (data.taskId) {
         queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
@@ -80,83 +196,45 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       toast({
         variant: 'destructive',
         title: 'New Blocker Reported',
-        description: data.blocker.description,
+        description: data.blocker?.description,
       });
-    });
+    };
 
-    // 3. Blocker Resolved Event
-    socket.on('blocker:resolved', (data: { blockerId: string; projectId: string; taskId: string }) => {
-      console.log('✅ Live blocker resolved:', data);
+    const handleBlockerResolved = (data: { blockerId: string; projectId: string; taskId: string }) => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       if (data.taskId) {
         queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
       }
-    });
+    };
 
-    // 4. Standup Submitted Event
-    socket.on('standup:submitted', (data: { standup: any; projectId: string | null; sprintId: string | null }) => {
-      console.log('📝 Live standup update:', data);
-      queryClient.invalidateQueries({ queryKey: ['standups'] });
-      queryClient.invalidateQueries({ queryKey: ['my-standups'] });
-      queryClient.invalidateQueries({ queryKey: ['team-standups'] });
-    });
-
-    // 5. Threaded Comments Events
-    socket.on('comment:new', (data: { comment: any; taskId: string; projectId: string }) => {
-      console.log('💬 Live new comment:', data);
-      queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
-      queryClient.invalidateQueries({ queryKey: ['comments', data.taskId] });
-    });
-
-    socket.on('comment:updated', (data: { comment: any; taskId: string }) => {
-      console.log('✏️ Live comment update:', data);
-      queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
-      queryClient.invalidateQueries({ queryKey: ['comments', data.taskId] });
-    });
-
-    socket.on('comment:deleted', (data: { commentId: string; taskId: string }) => {
-      console.log('🗑️ Live comment delete:', data);
-      queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
-      queryClient.invalidateQueries({ queryKey: ['comments', data.taskId] });
-    });
-
-    socket.on('reaction:updated', (data: { commentId: string; taskId: string; reactions: any[] }) => {
-      console.log('😀 Live reaction update:', data);
-      queryClient.invalidateQueries({ queryKey: ['task', data.taskId] });
-      queryClient.invalidateQueries({ queryKey: ['comments', data.taskId] });
-    });
-
-    // 6. In-App Notifications Broadcast
-    socket.on('notification:new', (notification: { id: string; title: string; message: string; linkUrl: string | null }) => {
-      console.log('🔔 Live notification received:', notification);
+    const handleNotificationNew = (notification: { id: string; title: string; message: string; linkUrl: string | null }) => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-
       toast({
         title: notification.title,
         description: notification.message,
       });
-    });
+    };
+
+    socketAdapter.on('task:updated', handleTaskUpdated);
+    socketAdapter.on('blocker:added', handleBlockerAdded);
+    socketAdapter.on('blocker:resolved', handleBlockerResolved);
+    socketAdapter.on('notification:new', handleNotificationNew);
 
     return () => {
-      socket.disconnect();
-      socketRef.current = null;
+      supabase.removeChannel(globalChannel);
+      supabase.removeChannel(userChannel);
+      activeRoomChannelsRef.current.forEach((ch) => supabase.removeChannel(ch));
+      activeRoomChannelsRef.current.clear();
+      listeners.clear();
+      setSocket(null);
     };
-  }, [isAuthenticated, token, queryClient, toast]);
+  }, [isAuthenticated, user, queryClient, toast]);
 
-  const joinProject = (projectId: string) => {
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('join:project', { projectId });
-    }
-  };
-
-  const leaveProject = (projectId: string) => {
-    if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('leave:project', { projectId });
-    }
-  };
+  const joinProject = (projectId: string) => {};
+  const leaveProject = (projectId: string) => {};
 
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current, joinProject, leaveProject }}>
+    <SocketContext.Provider value={{ socket, joinProject, leaveProject }}>
       {children}
     </SocketContext.Provider>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Check } from 'lucide-react';
 import { TEAM_MEMBERS } from '@/constants/teamMembers';
+import { useTeam } from '@/features/team/api/teamApi';
 import { Button } from '@/components/ui/button';
 
 export interface FilterState {
@@ -45,6 +46,9 @@ export const AdvancedFilterPanel: React.FC<AdvancedFilterPanelProps> = ({
   sprints = [],
   isBoardView = false,
 }) => {
+  const { data: realTeamMembers = [] } = useTeam();
+  const displayMembers = realTeamMembers.length > 0 ? realTeamMembers : TEAM_MEMBERS;
+
   if (!isOpen) return null;
 
   const togglePriority = (priority: string) => {
@@ -175,7 +179,7 @@ export const AdvancedFilterPanel: React.FC<AdvancedFilterPanelProps> = ({
           <div>
             <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-2.5">Assignee</label>
             <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-              {TEAM_MEMBERS.map((member) => {
+              {displayMembers.map((member) => {
                 const isSelected = filters.assigneeIds.includes(member.id);
                 return (
                   <button

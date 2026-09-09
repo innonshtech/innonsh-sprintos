@@ -1,6 +1,6 @@
 import prisma from '../../utils/prisma';
 import { NotificationType } from '@prisma/client';
-import { getIO } from '../../sockets/socket.server';
+import { supabase } from '../../utils/supabaseClient';
 import { SOCKET_EVENTS } from '../../sockets/socket.events';
 
 export class InAppNotificationService {
@@ -22,13 +22,16 @@ export class InAppNotificationService {
         },
       });
 
-      // Emit real-time notification to the user via Socket.IO
+      // Emit real-time notification to the user via Supabase Realtime
       try {
-        const io = getIO();
-        io.to(`user:${userId}`).emit(SOCKET_EVENTS.NOTIFICATION_NEW, notification);
+        const channel = supabase.channel(`user:${userId}`);
+        await channel.send({
+          type: 'broadcast',
+          event: SOCKET_EVENTS.NOTIFICATION_NEW,
+          payload: notification,
+        });
       } catch (wsError) {
-        // Log WebSocket emission failure but do not crash the service
-        console.warn('Could not emit live notification via Socket.IO:', wsError);
+        console.warn('Could not emit live notification via Supabase Realtime:', wsError);
       }
 
       return notification;

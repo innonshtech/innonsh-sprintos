@@ -11,11 +11,17 @@ import { Search, ListFilter, Plus, LayoutList } from 'lucide-react';
 import TaskDrawer from '../components/TaskDrawer';
 import { TEAM_MEMBERS } from '@/constants/teamMembers';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { useTeam } from '@/features/team/api/teamApi';
 
 export default function TaskListPage() {
   const { data: tasks = [], isLoading } = useTasks();
   const { data: projects = [] } = useProjects();
+  const { data: realTeamMembers = [] } = useTeam();
   const { user } = useAuthStore();
+
+  const availableMembers = useMemo(() => {
+    return realTeamMembers.length > 0 ? realTeamMembers : TEAM_MEMBERS;
+  }, [realTeamMembers]);
   
   const [search, setSearch] = useState('');
   const [drawerTaskId, setDrawerTaskId] = useState<string | null>(null);
@@ -40,7 +46,7 @@ export default function TaskListPage() {
   const visibleTasks = useMemo(() => {
     const filtered = tasks.filter((t: any) => {
       // Role permission check
-      if (!isPM && t.assigneeId !== user?.id) return false;
+      if (!isPM && t.assigneeId !== user?.id && t.assignee?.id !== user?.id) return false;
 
       // Search query
       if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t.key.toLowerCase().includes(search.toLowerCase())) return false;
@@ -52,7 +58,18 @@ export default function TaskListPage() {
       if (advancedFilters.statuses.length > 0 && !advancedFilters.statuses.includes(t.status)) return false;
 
       // Assignees
-      if (advancedFilters.assigneeIds.length > 0 && !advancedFilters.assigneeIds.includes(t.assigneeId)) return false;
+      if (advancedFilters.assigneeIds.length > 0) {
+        const matchesAssignee = advancedFilters.assigneeIds.some((filterId) => {
+          if (t.assigneeId === filterId || t.assignee?.id === filterId) return true;
+          const filterMember = availableMembers.find((m: any) => m.id === filterId) || TEAM_MEMBERS.find((m: any) => m.id === filterId);
+          if (filterMember) {
+            const taskAssigneeName = t.assignee?.name || availableMembers.find((m: any) => m.id === t.assigneeId)?.name || TEAM_MEMBERS.find(m => m.id === t.assigneeId)?.name;
+            if (taskAssigneeName && filterMember.name && taskAssigneeName.toLowerCase().includes(filterMember.name.toLowerCase())) return true;
+          }
+          return false;
+        });
+        if (!matchesAssignee) return false;
+      }
 
       // Projects
       if (advancedFilters.projectIds.length > 0 && !advancedFilters.projectIds.includes(t.projectId)) return false;
@@ -183,7 +200,7 @@ export default function TaskListPage() {
                 <tr><td colSpan={6} className="text-center py-10">Loading tasks...</td></tr>
               ) : visibleTasks.map((task: any) => {
                 const project = projects.find((p: any) => p.id === task.projectId);
-                const assignee = TEAM_MEMBERS.find(m => m.id === task.assigneeId);
+                const assignee = task.assignee || availableMembers.find((m: any) => m.id === task.assigneeId) || TEAM_MEMBERS.find(m => m.id === task.assigneeId);
                 
                 return (
                   <tr 

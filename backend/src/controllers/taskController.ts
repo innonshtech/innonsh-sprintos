@@ -3,9 +3,9 @@ import prisma from '../utils/prisma';
 import { notificationService } from '../services/notifications/notification.service';
 import { inAppNotificationService } from '../services/notifications/inapp-notification.service';
 import { ActivityTrackerService } from '../services/audit/activity-tracker.service';
-import { getIO } from '../sockets/socket.server';
 import { SOCKET_EVENTS } from '../sockets/socket.events';
 import { ChatService } from '../modules/chat/chat.service';
+import { supabase } from '../utils/supabaseClient';
 
 export const getTasks = async (req: Request, res: Response) => {
   try {
@@ -148,14 +148,18 @@ export const createTask = async (req: Request, res: Response) => {
     // Auto-create task chat channel removed for Enterprise Architecture (lazy creation)
 
     try {
-      const io = getIO();
-      io.to(`project:${projectId}`).to('organization').emit(SOCKET_EVENTS.TASK_UPDATED, {
-        action: 'CREATE',
-        taskId: task.id,
-        projectId
+      const channel = supabase.channel('sprintos-global');
+      await channel.send({
+        type: 'broadcast',
+        event: SOCKET_EVENTS.TASK_UPDATED,
+        payload: {
+          action: 'CREATE',
+          taskId: task.id,
+          projectId
+        }
       });
     } catch (wsError) {
-      console.warn('WebSocket emission failed:', wsError);
+      console.warn('Realtime emission failed:', wsError);
     }
 
     res.status(201).json({
@@ -292,14 +296,18 @@ export const updateTask = async (req: Request, res: Response) => {
     }
 
     try {
-      const io = getIO();
-      io.to(`project:${task.projectId}`).to('organization').emit(SOCKET_EVENTS.TASK_UPDATED, {
-        action: 'UPDATE',
-        taskId: task.id,
-        projectId: task.projectId
+      const channel = supabase.channel('sprintos-global');
+      await channel.send({
+        type: 'broadcast',
+        event: SOCKET_EVENTS.TASK_UPDATED,
+        payload: {
+          action: 'UPDATE',
+          taskId: task.id,
+          projectId: task.projectId
+        }
       });
     } catch (wsError) {
-      console.warn('WebSocket emission failed:', wsError);
+      console.warn('Realtime emission failed:', wsError);
     }
 
     res.status(200).json(task);
@@ -340,14 +348,18 @@ export const deleteTask = async (req: Request, res: Response) => {
     );
 
     try {
-      const io = getIO();
-      io.to(`project:${task.projectId}`).to('organization').emit(SOCKET_EVENTS.TASK_UPDATED, {
-        action: 'DELETE',
-        taskId: task.id,
-        projectId: task.projectId
+      const channel = supabase.channel('sprintos-global');
+      await channel.send({
+        type: 'broadcast',
+        event: SOCKET_EVENTS.TASK_UPDATED,
+        payload: {
+          action: 'DELETE',
+          taskId: task.id,
+          projectId: task.projectId
+        }
       });
     } catch (wsError) {
-      console.warn('WebSocket emission failed:', wsError);
+      console.warn('Realtime emission failed:', wsError);
     }
 
     res.status(200).json({ message: 'Task deleted successfully', task });
@@ -444,14 +456,18 @@ export const moveSprint = async (req: Request, res: Response) => {
     });
 
     try {
-      const io = getIO();
-      io.to(`project:${task.projectId}`).to('organization').emit(SOCKET_EVENTS.TASK_UPDATED, {
-        action: 'MOVE_SPRINT',
-        taskId: task.id,
-        projectId: task.projectId
+      const channel = supabase.channel('sprintos-global');
+      await channel.send({
+        type: 'broadcast',
+        event: SOCKET_EVENTS.TASK_UPDATED,
+        payload: {
+          action: 'MOVE_SPRINT',
+          taskId: task.id,
+          projectId: task.projectId
+        }
       });
     } catch (wsError) {
-      console.warn('WebSocket emission failed:', wsError);
+      console.warn('Realtime emission failed:', wsError);
     }
 
     res.status(200).json(task);
@@ -499,15 +515,19 @@ export const addBlocker = async (req: Request, res: Response) => {
     try {
       const task = await prisma.task.findUnique({ where: { id }, select: { projectId: true } });
       if (task?.projectId) {
-        const io = getIO();
-        io.to(`project:${task.projectId}`).to('organization').emit(SOCKET_EVENTS.BLOCKER_ADDED, {
-          blocker,
-          projectId: task.projectId,
-          taskId: id
+        const channel = supabase.channel('sprintos-global');
+        await channel.send({
+          type: 'broadcast',
+          event: SOCKET_EVENTS.BLOCKER_ADDED,
+          payload: {
+            blocker,
+            projectId: task.projectId,
+            taskId: id
+          }
         });
       }
     } catch (wsError) {
-      console.warn('WebSocket emission failed:', wsError);
+      console.warn('Realtime emission failed:', wsError);
     }
 
     res.status(201).json(blocker);
@@ -571,15 +591,19 @@ export const resolveBlocker = async (req: Request, res: Response) => {
     try {
       const task = await prisma.task.findUnique({ where: { id }, select: { projectId: true } });
       if (task?.projectId) {
-        const io = getIO();
-        io.to(`project:${task.projectId}`).to('organization').emit(SOCKET_EVENTS.BLOCKER_RESOLVED, {
-          blockerId,
-          projectId: task.projectId,
-          taskId: id
+        const channel = supabase.channel('sprintos-global');
+        await channel.send({
+          type: 'broadcast',
+          event: SOCKET_EVENTS.BLOCKER_RESOLVED,
+          payload: {
+            blockerId,
+            projectId: task.projectId,
+            taskId: id
+          }
         });
       }
     } catch (wsError) {
-      console.warn('WebSocket emission failed:', wsError);
+      console.warn('Realtime emission failed:', wsError);
     }
 
     res.status(200).json(blocker);

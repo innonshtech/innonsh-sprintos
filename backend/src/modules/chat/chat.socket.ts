@@ -32,6 +32,22 @@ export const registerChatHandlers = (socket: AuthenticatedSocket) => {
     lastSeen: new Date(),
   });
 
+  // Send current active user presences to this newly connected client
+  const activePresences: Record<string, string> = {};
+  activeUserSockets.forEach((sockets, uid) => {
+    if (sockets.size > 0) activePresences[uid] = 'ONLINE';
+  });
+  socket.emit('presence:init', activePresences);
+
+  socket.on('presence:get', (callback?: any) => {
+    const currentPresences: Record<string, string> = {};
+    activeUserSockets.forEach((sockets, uid) => {
+      if (sockets.size > 0) currentPresences[uid] = 'ONLINE';
+    });
+    if (callback) callback({ success: true, presences: currentPresences });
+    socket.emit('presence:init', currentPresences);
+  });
+
   // 1. JOIN CHANNEL ROOM
   socket.on(CHAT_EVENTS.ROOM_JOIN, async ({ channelId }: { channelId: string }, callback?: any) => {
     try {
@@ -54,11 +70,12 @@ export const registerChatHandlers = (socket: AuthenticatedSocket) => {
       // Update read receipt / last seen
       await ChatRepository.updateLastSeen(channelId, userId);
       
-      // Broadcast read receipt to others in the room
-      socket.to(roomName).emit(CHAT_EVENTS.READ_RECEIPT, {
+      // Broadcast read receipt to room
+      const now = new Date();
+      io.to(roomName).emit(CHAT_EVENTS.READ_RECEIPT, {
         channelId,
         userId,
-        lastSeenAt: new Date(),
+        lastSeenAt: now,
       });
 
       console.log(`💬 User ${user.email} joined chat room: ${roomName}`);
@@ -182,12 +199,13 @@ export const registerChatHandlers = (socket: AuthenticatedSocket) => {
       // Also update in Redis for quick access
       await redis.set(`lastSeen:channel:${channelId}:user:${userId}`, Date.now());
       
+      const now = new Date();
       const roomName = `channel:${channelId}`;
       
-      socket.to(roomName).emit(CHAT_EVENTS.READ_RECEIPT, {
+      io.to(roomName).emit(CHAT_EVENTS.READ_RECEIPT, {
         channelId,
         userId,
-        lastSeenAt: new Date(),
+        lastSeenAt: now,
       });
     } catch (err) {
       console.error('Error updating read receipts:', err);

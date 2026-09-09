@@ -279,7 +279,21 @@ export class ChatService {
     // 4. Parse Mentions and trigger notifications
     await this.processMentions(message.content, message.id, data.senderId, data.channelId);
 
-    // 5. Log Activity for new chat messages (non-threaded only to avoid logs flooding)
+    // 5. Send DM Notification to recipient if channel is DIRECT
+    if (channel?.type === 'DIRECT') {
+      const recipientMember = channel.members?.find((m: any) => m.userId !== data.senderId);
+      if (recipientMember) {
+        await inAppNotificationService.createNotification(
+          recipientMember.userId,
+          'MENTION',
+          `Direct message from ${message.sender.name}`,
+          `${message.sender.name}: "${data.content.substring(0, 60)}${data.content.length > 60 ? '...' : ''}"`,
+          `/dashboard/chat?channelId=${data.channelId}`
+        );
+      }
+    }
+
+    // 6. Log Activity for new chat messages (non-threaded only to avoid logs flooding)
     if (!data.parentMessageId) {
       await ActivityTrackerService.logActivity({
         userId: data.senderId,
@@ -291,7 +305,7 @@ export class ChatService {
       });
     }
 
-    // 6. Update sender's Last Seen for this channel
+    // 7. Update sender's Last Seen for this channel
     await ChatRepository.updateLastSeen(data.channelId, data.senderId);
 
     return message;

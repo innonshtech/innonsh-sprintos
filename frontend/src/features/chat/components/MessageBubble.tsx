@@ -49,7 +49,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
   // Check if message is read by at least one other member
   const channel = channels.find(c => c.id === message.channelId);
   const isReadByOthers = channel?.members?.some(
-    m => m.userId !== user?.id && m.lastSeenAt && new Date(m.lastSeenAt) >= new Date(message.createdAt)
+    m => m.userId !== user?.id && m.lastSeenAt && new Date(m.lastSeenAt).getTime() >= (new Date(message.createdAt).getTime() - 2000)
   );
 
   const handleEdit = () => {

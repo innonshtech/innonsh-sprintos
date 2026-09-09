@@ -111,7 +111,21 @@ export const useChatSocket = () => {
 
     // 5. Listen for read receipts
     socket.on(EVENTS.READ_RECEIPT, (data: { channelId: string; userId: string; lastSeenAt: string }) => {
-      // Invalidate channels list to sync last seen / unread badges
+      // Update channels list in-place to immediately sync last seen
+      queryClient.setQueryData(['chat-channels'], (oldChannels: any[] | undefined) => {
+        if (!oldChannels) return oldChannels;
+        return oldChannels.map((c) => {
+          if (c.id === data.channelId && c.members) {
+            return {
+              ...c,
+              members: c.members.map((m: any) =>
+                m.userId === data.userId ? { ...m, lastSeenAt: data.lastSeenAt } : m
+              ),
+            };
+          }
+          return c;
+        });
+      });
       queryClient.invalidateQueries({ queryKey: ['chat-channels'] });
     });
 
@@ -156,9 +170,18 @@ export const useChatSocket = () => {
     );
 
     // 8. Listen for presence status updates
+    socket.on('presence:init', (presences: Record<string, string>) => {
+      Object.entries(presences).forEach(([uid, status]) => {
+        setUserPresence(uid, status);
+      });
+    });
+
     socket.on(EVENTS.PRESENCE_UPDATE, (data: { userId: string; status: any }) => {
       setUserPresence(data.userId, data.status);
     });
+
+    // Request active presences from backend
+    socket.emit('presence:get');
 
     return () => {
       socket.off(EVENTS.MESSAGE_NEW);
@@ -169,6 +192,7 @@ export const useChatSocket = () => {
       socket.off(EVENTS.REACTION_ADD);
       socket.off(EVENTS.REACTION_REMOVE);
       socket.off(EVENTS.PIN_TOGGLE);
+      socket.off('presence:init');
       socket.off(EVENTS.PRESENCE_UPDATE);
     };
   }, [socket, activeChannelId, activeThreadMessage, queryClient, setUserPresence, setTypingUser]);

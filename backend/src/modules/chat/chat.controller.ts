@@ -3,7 +3,7 @@ import { ChatService } from './chat.service';
 import { ChatRepository } from './chat.repository';
 import prisma from '../../utils/prisma';
 import { CHAT_EVENTS } from './chat.events';
-import { getIO } from '../../sockets/socket.server';
+import { supabase } from '../../utils/supabaseClient';
 
 export class ChatController {
   // 1. DMs
@@ -312,13 +312,23 @@ export class ChatController {
         parentMessageId: parentMessageId || undefined,
       });
 
-      // Broadcast to channel room via socket
+      // Broadcast to channel room via Supabase Realtime
       try {
-        const io = getIO();
-        const roomName = `channel:${channelId}`;
-        io.to(roomName).emit(CHAT_EVENTS.MESSAGE_NEW, message);
+        const channel = supabase.channel(`chat:room:${channelId}`);
+        await channel.send({
+          type: 'broadcast',
+          event: CHAT_EVENTS.MESSAGE_NEW,
+          payload: message,
+        });
+        // Also send to global channel for sidebar/unread counts
+        const globalCh = supabase.channel('sprintos-global');
+        await globalCh.send({
+          type: 'broadcast',
+          event: CHAT_EVENTS.MESSAGE_NEW,
+          payload: message,
+        });
       } catch (ioErr) {
-        console.warn('Socket.IO not initialized or failed to broadcast message:', ioErr);
+        console.warn('Failed to broadcast message via Supabase Realtime:', ioErr);
       }
 
       res.status(201).json(message);
@@ -347,13 +357,16 @@ export class ChatController {
         parentMessageId: messageId,
       });
 
-      // Broadcast reply to channel room via socket
+      // Broadcast reply to channel room via Supabase Realtime
       try {
-        const io = getIO();
-        const roomName = `channel:${parentMessage.channelId}`;
-        io.to(roomName).emit(CHAT_EVENTS.MESSAGE_NEW, message);
+        const channel = supabase.channel(`chat:room:${parentMessage.channelId}`);
+        await channel.send({
+          type: 'broadcast',
+          event: CHAT_EVENTS.MESSAGE_NEW,
+          payload: message,
+        });
       } catch (ioErr) {
-        console.warn('Socket.IO not initialized or failed to broadcast reply:', ioErr);
+        console.warn('Failed to broadcast reply via Supabase Realtime:', ioErr);
       }
 
       res.status(201).json(message);

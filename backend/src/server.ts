@@ -9,8 +9,12 @@ const PORT = process.env.PORT || 5000;
 
 const server = http.createServer(app);
 
-// Initialize the socket server
-initSocketServer(server);
+// Initialize the socket server (optional fallback for local legacy sockets)
+try {
+  initSocketServer(server);
+} catch (wsErr) {
+  console.warn('Local Socket.io server omitted (Realtime handled via Supabase):', wsErr);
+}
 
 async function startServer() {
   try {
