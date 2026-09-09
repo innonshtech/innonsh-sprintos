@@ -166,6 +166,26 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           });
           emitToListeners('presence:init', presences);
           if (callback) callback({ success: true, presences });
+        } else if (event === 'chat:typing') {
+          const channelId = payload?.channelId;
+          const typingPayload = {
+            channelId,
+            userId: user.id,
+            userName: payload?.userName || user.name,
+            isTyping: payload?.isTyping,
+          };
+          if (channelId && activeRoomChannelsRef.current.has(channelId)) {
+            activeRoomChannelsRef.current.get(channelId)!.send({
+              type: 'broadcast',
+              event: 'chat:typing',
+              payload: typingPayload,
+            });
+          }
+          globalChannel.send({
+            type: 'broadcast',
+            event: 'chat:typing',
+            payload: typingPayload,
+          });
         } else {
           // Broadcast to global channel
           globalChannel.send({

@@ -18,6 +18,7 @@ router.delete('/channels/:id', ChatController.deleteChannel);
 // Messages
 router.get('/channels/:channelId/messages', ChatController.getMessages);
 router.post('/channels/:channelId/messages', ChatController.sendMessage);
+router.post('/channels/:channelId/read', ChatController.markAsRead);
 router.get('/messages/:messageId/replies', ChatController.getReplies);
 router.post('/messages/:messageId/replies', ChatController.sendReply);
 

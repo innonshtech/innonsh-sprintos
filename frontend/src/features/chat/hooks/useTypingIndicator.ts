@@ -1,10 +1,12 @@
 import { useRef, useEffect } from 'react';
 import { useSocket } from '../../realtime/SocketProvider';
 import { useChatStore } from '../store/chatStore';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 export const useTypingIndicator = () => {
   const { socket } = useSocket();
   const { activeChannelId } = useChatStore();
+  const { user } = useAuthStore();
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isTypingRef = useRef<boolean>(false);
 
@@ -15,6 +17,7 @@ export const useTypingIndicator = () => {
     socket.emit('chat:typing', {
       channelId: activeChannelId,
       isTyping,
+      userName: user?.name || 'Someone',
     });
     isTypingRef.current = isTyping;
   };

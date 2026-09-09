@@ -5,9 +5,10 @@ import { Smile } from 'lucide-react';
 interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
   trigger?: React.ReactNode;
+  align?: 'left' | 'right';
 }
 
-export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelect, trigger }) => {
+export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelect, trigger, align = 'left' }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -36,7 +37,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({ onEmojiSelect, trigger
       </div>
 
       {isOpen && (
-        <div className="absolute bottom-12 right-0 p-0 border-none shadow-2xl z-[9999] bg-zinc-950 rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-150">
+        <div className={`absolute bottom-12 ${align === 'right' ? 'right-0' : 'left-0'} p-0 border-none shadow-2xl z-[9999] bg-zinc-950 rounded-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-150`}>
           <EmojiPickerReact
             theme={Theme.DARK}
             onEmojiClick={(emojiData) => {

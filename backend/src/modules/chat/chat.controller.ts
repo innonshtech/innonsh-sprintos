@@ -33,6 +33,9 @@ export class ChatController {
       const channel = await ChatService.getOrCreateDMChannel(senderId, userId);
       if (!channel) return res.status(404).json({ error: 'DM history not found' });
       
+      // Update read receipt for sender
+      await ChatRepository.updateLastSeen(channel.id, senderId);
+
       const messages = await ChatRepository.getChannelMessages(channel.id);
       
       res.status(200).json({ channel, messages });
@@ -164,12 +167,50 @@ export class ChatController {
       const hasAccess = await ChatService.validateUserAccess(channelId, userId);
       if (!hasAccess) return res.status(403).json({ error: 'Forbidden: Access denied to this channel' });
 
+      // Update read receipt timestamp
+      await ChatRepository.updateLastSeen(channelId, userId);
+
       const limitNum = limit ? parseInt(limit as string) : 50;
       const messages = await ChatRepository.getChannelMessages(channelId, limitNum, cursor as string);
 
       res.status(200).json(messages);
     } catch (error: any) {
       res.status(500).json({ error: error.message || 'Failed to fetch messages' });
+    }
+  }
+
+  static async markAsRead(req: Request, res: Response) {
+    try {
+      const userId = req.user?.id;
+      const { channelId } = req.params;
+
+      if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+      await ChatRepository.updateLastSeen(channelId, userId);
+      const now = new Date();
+
+      // Broadcast read receipt via Supabase Realtime
+      try {
+        const ch = supabase.channel(`chat:room:${channelId}`);
+        await ch.send({
+          type: 'broadcast',
+          event: CHAT_EVENTS.READ_RECEIPT,
+          payload: { channelId, userId, lastSeenAt: now },
+        });
+
+        const globalCh = supabase.channel('sprintos-global');
+        await globalCh.send({
+          type: 'broadcast',
+          event: CHAT_EVENTS.READ_RECEIPT,
+          payload: { channelId, userId, lastSeenAt: now },
+        });
+      } catch (err) {
+        console.warn('Failed to broadcast read receipt via Supabase:', err);
+      }
+
+      res.status(200).json({ success: true, lastSeenAt: now });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || 'Failed to mark as read' });
     }
   }
 

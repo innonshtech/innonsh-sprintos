@@ -13,8 +13,15 @@ export default function SprintListPage() {
   const { data: tasks = [] } = useTasks();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const parseSprintNumber = (name: string): number => {
+    const match = name.match(/Sprint\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : 999;
+  };
+
   const activeSprints = sprints.filter(s => s.status === 'ACTIVE');
-  const otherSprints = sprints.filter(s => s.status !== 'ACTIVE');
+  const otherSprints = sprints
+    .filter(s => s.status !== 'ACTIVE')
+    .sort((a, b) => parseSprintNumber(a.name) - parseSprintNumber(b.name) || new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
   // Helper to count active blockers for a sprint
   const getSprintBlockerCount = (sprintId: string) => {

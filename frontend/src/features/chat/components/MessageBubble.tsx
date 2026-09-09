@@ -290,6 +290,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message, onConvert
               </button>
             ))}
             <EmojiPicker
+              align="right"
               onEmojiSelect={(emoji) => handleReactionClick(emoji)}
               trigger={
                 <button className="text-zinc-500 hover:text-zinc-900 p-1 rounded hover:bg-zinc-100 focus:outline-none">

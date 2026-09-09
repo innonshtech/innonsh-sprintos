@@ -29,9 +29,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ channel, onConvertTask }
   };
   const otherMember = getOtherMember();
   const presence = otherMember ? userPresences[otherMember.userId] || 'OFFLINE' : null;
-  const lastSeenText = otherMember?.lastSeenAt 
-    ? `Last seen ${formatDistanceToNow(new Date(otherMember.lastSeenAt), { addSuffix: true })}` 
-    : 'Offline';
+  const lastSeenDate = otherMember?.lastSeenAt ? new Date(otherMember.lastSeenAt) : null;
+  const lastSeenText = lastSeenDate && !isNaN(lastSeenDate.getTime())
+    ? `Last seen ${formatDistanceToNow(lastSeenDate, { addSuffix: true })}` 
+    : 'Last seen recently';
 
   // Auto-scroll to bottom of messages
   useEffect(() => {

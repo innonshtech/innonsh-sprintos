@@ -2,6 +2,53 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { autoUpdateSprintStatuses } from '../utils/sprintUpdater';
 
+const parseSprintNumber = (name: string): number => {
+  const match = name.match(/Sprint\s*(\d+)/i);
+  return match ? parseInt(match[1], 10) : 999;
+};
+
+export const cascadeSprintDates = async (projectId: string) => {
+  const sprints = await prisma.sprint.findMany({
+    where: { projectId, isArchived: false }
+  });
+
+  if (sprints.length === 0) return;
+
+  sprints.sort((a, b) => {
+    const numA = parseSprintNumber(a.name);
+    const numB = parseSprintNumber(b.name);
+    if (numA !== numB) return numA - numB;
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+  });
+
+  const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+  let currentStart = new Date(sprints[0].startDate);
+
+  for (let i = 0; i < sprints.length; i++) {
+    const sprint = sprints[i];
+    const sprintStart = new Date(currentStart);
+    
+    const rawDuration = new Date(sprint.endDate).getTime() - new Date(sprint.startDate).getTime();
+    const duration = rawDuration > 0 ? rawDuration : FOURTEEN_DAYS_MS;
+    
+    const sprintEnd = new Date(sprintStart.getTime() + duration);
+    currentStart = new Date(sprintEnd);
+
+    if (
+      new Date(sprint.startDate).getTime() !== sprintStart.getTime() ||
+      new Date(sprint.endDate).getTime() !== sprintEnd.getTime()
+    ) {
+      await prisma.sprint.update({
+        where: { id: sprint.id },
+        data: {
+          startDate: sprintStart,
+          endDate: sprintEnd
+        }
+      });
+    }
+  }
+};
+
 export const getSprints = async (req: Request, res: Response) => {
   try {
     await autoUpdateSprintStatuses();
@@ -29,7 +76,14 @@ export const getSprints = async (req: Request, res: Response) => {
       include: {
         project: true,
       },
-      orderBy: { startDate: 'desc' }
+      orderBy: { startDate: 'asc' }
+    });
+
+    sprints.sort((a, b) => {
+      const numA = parseSprintNumber(a.name);
+      const numB = parseSprintNumber(b.name);
+      if (numA !== numB) return numA - numB;
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
     });
     
     res.status(200).json(sprints);
@@ -72,7 +126,6 @@ export const createSprint = async (req: Request, res: Response) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Timezone-safe check: allow start date if it's within the last 36 hours to account for timezone differences
     const minStartDate = new Date(Date.now() - 36 * 60 * 60 * 1000);
 
     if (start < minStartDate) {
@@ -100,6 +153,10 @@ export const createSprint = async (req: Request, res: Response) => {
       }
     });
 
+    if (projectId) {
+      await cascadeSprintDates(projectId);
+    }
+
     res.status(201).json(sprint);
   } catch (error) {
     console.error(error);
@@ -118,7 +175,6 @@ export const updateSprint = async (req: Request, res: Response) => {
     const start = startDate ? new Date(startDate) : new Date(currentSprint.startDate);
     const end = endDate ? new Date(endDate) : new Date(currentSprint.endDate);
     
-    // Only validate start date against today if it's being updated
     if (startDate) {
       const minStartDate = new Date(Date.now() - 36 * 60 * 60 * 1000);
       if (start < minStartDate) {
@@ -143,12 +199,21 @@ export const updateSprint = async (req: Request, res: Response) => {
     if (endDate !== undefined) dataToUpdate.endDate = end;
     if (status !== undefined) dataToUpdate.status = status;
 
-    const sprint = await prisma.sprint.update({
+    await prisma.sprint.update({
       where: { id },
       data: dataToUpdate
     });
 
-    res.status(200).json(sprint);
+    if (currentSprint.projectId) {
+      await cascadeSprintDates(currentSprint.projectId);
+    }
+
+    const updatedSprint = await prisma.sprint.findUnique({
+      where: { id },
+      include: { project: true }
+    });
+
+    res.status(200).json(updatedSprint);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to update sprint' });
@@ -181,3 +246,4 @@ export const archiveSprint = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message || 'Failed to archive sprint' });
   }
 };
+

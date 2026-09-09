@@ -85,9 +85,17 @@ export const useMessages = () => {
     socket.emit('chat:pin:toggle', { messageId });
   };
 
-  const triggerReadReceipt = () => {
-    if (!socket || !activeChannelId) return;
-    socket.emit('chat:read', { channelId: activeChannelId });
+  const triggerReadReceipt = async () => {
+    if (!activeChannelId) return;
+    try {
+      if (socket) {
+        socket.emit('chat:read', { channelId: activeChannelId });
+      }
+      await api.post(`/chat/channels/${activeChannelId}/read`);
+      queryClient.invalidateQueries({ queryKey: ['chat-channels'] });
+    } catch (err) {
+      console.warn('Failed to send read receipt:', err);
+    }
   };
 
   return {
