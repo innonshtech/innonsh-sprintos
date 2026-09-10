@@ -12,9 +12,13 @@ async function main() {
     { name: "Saket", email: "saket.innonsh@gmail.com", password: "saket@123", role: UserRole.PRODUCT_MANAGER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=saket", isActive: true },
     { name: "Lokeek", email: "lokeek.innonsh@gmail.com", password: "lokeek@123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=lokeek", isActive: true },
     { name: "Sanket", email: "sanketn022@gmail.com", password: "sanket@123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=sanketn", isActive: true },
+    { name: "Samarth", email: "samarth.innonsh@gmail.com", password: "samarth@123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=samarth", isActive: true },
+    { name: "Vaibhav", email: "vaibhav.innonsh@gmail.com", password: "vaibhav@123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=vaibhav", isActive: true },
     { name: "Chetana Pakhale", email: "chetana.innonsh@gmail.com", password: "chetana@123", role: UserRole.PRODUCT_MANAGER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=chetana", isActive: true },
-    { name: "Nupur Kulkarni", email: "nupur.innonsh@gmail.com", password: "nupur@123", role: UserRole.DEVELOPER, department: "Engineering", avatar: "https://i.pravatar.cc/150?u=nupur", isActive: true },
-    { name: "Nikheel", email: "nikheel.innonsh@gmail.com", password: "nikheel@123", role: UserRole.ADMIN, department: "Executive", avatar: "https://i.pravatar.cc/150?u=nikheel", isActive: true }
+    { name: "Nikheel", email: "nikheel.innonsh@gmail.com", password: "nikheel@123", role: UserRole.ADMIN, department: "Executive", avatar: "https://i.pravatar.cc/150?u=nikheel", isActive: true },
+    { name: "Sanju Verma", email: "sanju.verma@gyoash.com", password: "sanju@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=sanju", isActive: true },
+    { name: "Girish Khairnar", email: "girish.khairnar@gyoash.com", password: "girish@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=girish", isActive: true },
+    { name: "Pawan Verma", email: "pawan.verma@gyoash.com", password: "pawan@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=pawan", isActive: true },
   ];
 
   const createdUsers: Record<string, any> = {};
@@ -28,12 +32,13 @@ async function main() {
     createdUsers[u.name] = userRecord;
   }
 
-  // Assignable users (Excluding Saket & Nikheel)
+  // Assignable users (Excluding Saket, Nikheel, & Product Owners)
   const assignableUsers = [
     createdUsers["Lokeek"],
     createdUsers["Sanket"],
+    createdUsers["Samarth"],
+    createdUsers["Vaibhav"],
     createdUsers["Chetana Pakhale"],
-    createdUsers["Nupur Kulkarni"]
   ].filter(Boolean);
 
   // 2. Read extracted stories JSON
