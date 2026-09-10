@@ -31,15 +31,17 @@ const parseCookies = (cookieString?: string): Record<string, string> => {
 export const initSocketServer = (server: HTTPServer): Server => {
   io = new Server(server, {
     cors: {
-      origin: [
-        'http://localhost:3000',
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:5176',
-        'https://innonsh-sprintos-frontend.vercel.app',
-        'https://sprintos.innonsh.com',
-        process.env.FRONTEND_URL || '',
-      ].filter(Boolean),
+      origin: (origin, callback) => {
+        if (!origin || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) || [
+          'https://innonsh-sprintos-frontend.vercel.app',
+          'https://sprintos.innonsh.com',
+          process.env.FRONTEND_URL,
+        ].includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
     },
     transports: ['websocket', 'polling'],
