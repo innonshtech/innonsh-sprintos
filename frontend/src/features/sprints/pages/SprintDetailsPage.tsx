@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSprint } from '../api/sprintApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,19 +10,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, Clock, AlertTriangle, LayoutDashboard, Target, Users, UserPlus, ExternalLink } from 'lucide-react';
 import { SprintActionDropdown } from '../components/SprintActionDropdown';
 import { useAuthStore } from '@/features/auth/store/authStore';
+import { useTeam } from '@/features/team/api/teamApi';
 import { TEAM_MEMBERS } from '@/constants/teamMembers';
 import TaskDrawer from '@/features/tasks/components/TaskDrawer';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SprintDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { data: sprint, isLoading } = useSprint(id!);
+  const { data: realTeamMembers = [] } = useTeam();
   const { user } = useAuthStore();
   const { toast } = useToast();
 
   const [drawerTaskId, setDrawerTaskId] = useState<string | null>(null);
   const [isEditMembersOpen, setIsEditMembersOpen] = useState(false);
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+
+  const allTeamMembers = realTeamMembers.length > 0 ? realTeamMembers : TEAM_MEMBERS;
 
   if (isLoading) return <div className="flex justify-center p-10">Loading sprint...</div>;
   if (!sprint) return <div>Sprint not found.</div>;
@@ -44,7 +49,11 @@ export default function SprintDetailsPage() {
   const sprintMemberIds = Array.from(new Set([...(sprint.members?.map((m: any) => m.userId) || []), ...taskAssigneeIds]));
   
   // Working team members objects
-  const workingMembers = TEAM_MEMBERS.filter(m => sprintMemberIds.includes(m.id) || (selectedMemberIds.length > 0 && selectedMemberIds.includes(m.id)));
+  const workingMembers = allTeamMembers.filter((m: any) => 
+    sprintMemberIds.includes(m.id) || 
+    (selectedMemberIds.length > 0 && selectedMemberIds.includes(m.id)) ||
+    sprintTasks.some((t: any) => t.assigneeId === m.id || t.assignee?.id === m.id)
+  );
 
   const handleOpenEditMembers = () => {
     setSelectedMemberIds(workingMembers.map(m => m.id));
@@ -69,11 +78,15 @@ export default function SprintDetailsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link to="/dashboard/sprints">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate(-1)} 
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            title="Go back"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <div>
             <div className="flex items-center gap-3 mb-1">
               <Badge variant="outline" className="font-mono text-xs">{project?.key}</Badge>
@@ -177,18 +190,18 @@ export default function SprintDetailsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-3">
-            {workingMembers.map(member => (
+            {workingMembers.map((member: any) => (
               <div 
                 key={member.id} 
                 className="flex items-center gap-2.5 px-3 py-2 bg-muted/30 border border-border/60 rounded-xl hover:border-indigo-500/40 transition-all"
               >
                 <Avatar className="w-7 h-7 border border-border">
                   <AvatarImage src={member.avatar} />
-                  <AvatarFallback className="text-[10px] font-bold">{member.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="text-[10px] font-bold">{(member.name || '?').charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col text-left">
-                  <span className="text-xs font-bold text-foreground leading-tight">{member.name}</span>
-                  <span className="text-[10px] text-muted-foreground">{member.role.replace('_', ' ')}</span>
+                  <span className="text-xs font-bold text-foreground leading-tight">{member.name || 'Unknown'}</span>
+                  <span className="text-[10px] text-muted-foreground">{(member.role || 'MEMBER').replace('_', ' ')}</span>
                 </div>
               </div>
             ))}
@@ -273,7 +286,7 @@ export default function SprintDetailsPage() {
           </p>
 
           <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-            {TEAM_MEMBERS.map(member => {
+            {allTeamMembers.map((member: any) => {
               const isChecked = selectedMemberIds.includes(member.id);
               return (
                 <div 
@@ -288,11 +301,11 @@ export default function SprintDetailsPage() {
                   <div className="flex items-center gap-3">
                     <Avatar className="w-8 h-8 border border-border">
                       <AvatarImage src={member.avatar} />
-                      <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{(member.name || '?').charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col text-left">
-                      <span className="text-xs font-bold text-foreground">{member.name}</span>
-                      <span className="text-[10px] text-muted-foreground">{member.role.replace('_', ' ')} • {member.email}</span>
+                      <span className="text-xs font-bold text-foreground">{member.name || 'Unknown'}</span>
+                      <span className="text-[10px] text-muted-foreground">{(member.role || 'MEMBER').replace('_', ' ')} • {member.email || ''}</span>
                     </div>
                   </div>
                   <Checkbox checked={isChecked} onCheckedChange={() => handleToggleMember(member.id)} />
