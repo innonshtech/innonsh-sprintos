@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTask, useUpdateTask, useUpdateTaskStatus, useAddSubtask, useUpdateSubtask, useArchiveTask, useRestoreTask, useDeleteTask, useResolveBlocker } from '../api/taskApi';
 import { useAuthStore } from '@/features/auth/store/authStore';
@@ -60,19 +60,27 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const [resolutionNote, setResolutionNote] = useState('');
   const [showResolveInput, setShowResolveInput] = useState(false);
   const [showDiscussionModal, setShowDiscussionModal] = useState(false);
-  
+
+  const availableMembers = realTeamMembers.length > 0 ? realTeamMembers : TEAM_MEMBERS;
+
+  const assignableMembers = useMemo(() => {
+    const list = [...availableMembers];
+    if (task?.assignee && !list.some((m: any) => m.id === task.assignee?.id)) {
+      list.push(task.assignee);
+    }
+    if (task?.assigneeId && !list.some((m: any) => m.id === task.assigneeId)) {
+      const fallbackMember = TEAM_MEMBERS.find(m => m.id === task.assigneeId);
+      if (fallbackMember) list.push(fallbackMember);
+    }
+    return list;
+  }, [availableMembers, task?.assignee, task?.assigneeId]);
+
   if (!taskId) return null;
   if (isLoading) return <Sheet open={!!taskId} onOpenChange={(open) => !open && onClose()}><SheetContent><div className="p-10 text-center">Loading task details...</div></SheetContent></Sheet>;
   if (!task) return null;
 
   const project = task.project;
   const sprint = task.sprint;
-  const availableMembers = realTeamMembers.length > 0 ? realTeamMembers : TEAM_MEMBERS;
-  const EXCLUDED_ASSIGNABLE_NAMES = ['shashank', 'aman', 'nikheel', 'saket', 'pawan'];
-  const assignableMembers = availableMembers.filter((m: any) => {
-    const nameLower = (m.name || '').toLowerCase();
-    return !EXCLUDED_ASSIGNABLE_NAMES.some(ex => nameLower.includes(ex));
-  });
   const assignee = task.assignee || availableMembers.find((m: any) => m.id === task.assigneeId) || TEAM_MEMBERS.find(m => m.id === task.assigneeId);
   const reporter = task.creator || availableMembers.find((m: any) => m.id === task.creatorId) || TEAM_MEMBERS.find(m => m.id === task.creatorId);
   const blocker = task.blockers?.find((b: any) => !b.isResolved);

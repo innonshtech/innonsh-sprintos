@@ -34,7 +34,7 @@ export default function TaskListPage() {
   // Filter tasks based on user role
   const isPM = user?.role === 'PRODUCT_MANAGER';
   
-  const [sortField, setSortField] = useState<'key' | 'title' | 'status' | 'priority'>('key');
+  const [sortField, setSortField] = useState<'key' | 'title' | 'project' | 'sprint' | 'status' | 'priority' | 'assignee'>('key');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const getKeyNum = (key?: string) => {
@@ -95,15 +95,27 @@ export default function TaskListPage() {
         comparison = getKeyNum(a.key) - getKeyNum(b.key);
       } else if (sortField === 'title') {
         comparison = a.title.localeCompare(b.title);
+      } else if (sortField === 'project') {
+        const projA = projects.find((p: any) => p.id === a.projectId)?.name || a.project?.name || '';
+        const projB = projects.find((p: any) => p.id === b.projectId)?.name || b.project?.name || '';
+        comparison = projA.localeCompare(projB);
+      } else if (sortField === 'sprint') {
+        const sprintA = a.sprint?.name || '';
+        const sprintB = b.sprint?.name || '';
+        comparison = sprintA.localeCompare(sprintB);
       } else if (sortField === 'status') {
         comparison = (a.status || '').localeCompare(b.status || '');
       } else if (sortField === 'priority') {
         const priorityOrder: Record<string, number> = { CRITICAL: 5, URGENT: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
         comparison = (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+      } else if (sortField === 'assignee') {
+        const nameA = a.assignee?.name || availableMembers.find((m: any) => m.id === a.assigneeId)?.name || '';
+        const nameB = b.assignee?.name || availableMembers.find((m: any) => m.id === b.assigneeId)?.name || '';
+        comparison = nameA.localeCompare(nameB);
       }
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-  }, [tasks, search, isPM, user, advancedFilters, sortField, sortOrder]);
+  }, [tasks, search, isPM, user, advancedFilters, sortField, sortOrder, projects, availableMembers]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -173,7 +185,24 @@ export default function TaskListPage() {
                 >
                   Title {sortField === 'title' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
                 </th>
-                <th className="px-6 py-4 font-medium">Project</th>
+                <th 
+                  className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
+                  onClick={() => {
+                    if (sortField === 'project') setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                    else { setSortField('project'); setSortOrder('asc'); }
+                  }}
+                >
+                  Project {sortField === 'project' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                </th>
+                <th 
+                  className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
+                  onClick={() => {
+                    if (sortField === 'sprint') setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                    else { setSortField('sprint'); setSortOrder('asc'); }
+                  }}
+                >
+                  Sprint {sortField === 'sprint' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                </th>
                 <th 
                   className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
                   onClick={() => {
@@ -192,14 +221,22 @@ export default function TaskListPage() {
                 >
                   Priority {sortField === 'priority' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
                 </th>
-                <th className="px-6 py-4 font-medium">Assignee</th>
+                <th 
+                  className="px-6 py-4 font-medium cursor-pointer hover:text-foreground transition-colors"
+                  onClick={() => {
+                    if (sortField === 'assignee') setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                    else { setSortField('assignee'); setSortOrder('asc'); }
+                  }}
+                >
+                  Assignee {sortField === 'assignee' ? (sortOrder === 'asc' ? '↑' : '↓') : ''}
+                </th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
-                <tr><td colSpan={6} className="text-center py-10">Loading tasks...</td></tr>
+                <tr><td colSpan={7} className="text-center py-10">Loading tasks...</td></tr>
               ) : visibleTasks.map((task: any) => {
-                const project = projects.find((p: any) => p.id === task.projectId);
+                const project = projects.find((p: any) => p.id === task.projectId) || task.project;
                 const assignee = task.assignee || availableMembers.find((m: any) => m.id === task.assigneeId) || TEAM_MEMBERS.find(m => m.id === task.assigneeId);
                 
                 return (
@@ -215,7 +252,16 @@ export default function TaskListPage() {
                       <span className="hover:text-indigo-600 transition-colors">{task.title}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-muted-foreground">{project?.name}</span>
+                      <span className="text-muted-foreground">{project?.name || '—'}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {task.sprint ? (
+                        <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300 border-indigo-200/60 dark:border-indigo-800/50 font-medium text-xs">
+                          {task.sprint.name}
+                        </Badge>
+                      ) : (
+                        <span className="text-muted-foreground text-xs italic">Backlog</span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <Badge variant="outline" className="text-[10px]">

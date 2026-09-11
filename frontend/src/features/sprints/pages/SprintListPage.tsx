@@ -2,13 +2,17 @@ import { useState } from 'react';
 import { useSprints } from '../api/sprintApi';
 import { useTasks } from '@/features/tasks/api/taskApi';
 import { CreateSprintModal } from '../components/CreateSprintModal';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, BarChart3, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, BarChart3, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useAuthStore } from '@/features/auth/store/authStore';
 
 export default function SprintListPage() {
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const isPM = user?.role === 'PRODUCT_MANAGER';
   const { data: sprints = [], isLoading } = useSprints();
   const { data: tasks = [] } = useTasks();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,13 +90,26 @@ export default function SprintListPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Sprints</h1>
-          <p className="text-muted-foreground">Track ongoing and planned sprint executions.</p>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => navigate(-1)} 
+            className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
+            title="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Sprints</h1>
+            <p className="text-muted-foreground">Track ongoing and planned sprint executions.</p>
+          </div>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-soft">
-          New Sprint
-        </Button>
+        {isPM && (
+          <Button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-soft">
+            New Sprint
+          </Button>
+        )}
       </div>
 
       {isLoading && <div className="flex justify-center p-10">Loading sprints...</div>}
@@ -128,7 +145,7 @@ export default function SprintListPage() {
         )}
       </section>
 
-      <CreateSprintModal open={isModalOpen} onOpenChange={setIsModalOpen} />
+      {isPM && <CreateSprintModal open={isModalOpen} onOpenChange={setIsModalOpen} />}
     </div>
   );
 }

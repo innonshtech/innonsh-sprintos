@@ -30,12 +30,7 @@ export function CreateTaskModal({ open, onOpenChange, defaultProjectId, defaultS
   const { toast } = useToast();
   const { data: projects = [] } = useProjects();
   const { data: rawTeamMembers = [] } = useTeam();
-  const teamMembers = rawTeamMembers.length > 0 ? rawTeamMembers : TEAM_MEMBERS;
-  const EXCLUDED_ASSIGNABLE_NAMES = ['shashank', 'aman', 'nikheel', 'saket', 'pawan'];
-  const assignableTeamMembers = teamMembers.filter((m: any) => {
-    const nameLower = (m.name || '').toLowerCase();
-    return !EXCLUDED_ASSIGNABLE_NAMES.some(ex => nameLower.includes(ex));
-  });
+  const assignableTeamMembers = rawTeamMembers.length > 0 ? rawTeamMembers : TEAM_MEMBERS;
   
   const [projectId, setProjectId] = useState(defaultProjectId || '');
   const { data: sprints = [] } = useSprints(projectId);

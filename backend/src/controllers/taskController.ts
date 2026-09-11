@@ -222,6 +222,7 @@ export const updateTask = async (req: Request, res: Response) => {
       include: {
         assignee: true,
         project: true,
+        sprint: true,
         blockers: {
           where: { isResolved: false }
         }
