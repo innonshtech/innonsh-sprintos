@@ -18,7 +18,6 @@ async function main() {
     { name: "Nikheel", email: "nikheel.innonsh@gmail.com", password: "nikheel@123", role: UserRole.ADMIN, department: "Executive", avatar: "https://i.pravatar.cc/150?u=nikheel", isActive: true },
     { name: "Sanju Verma", email: "sanju.verma@gyoash.com", password: "sanju@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=sanju", isActive: true },
     { name: "Girish Khairnar", email: "girish.khairnar@gyoash.com", password: "girish@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=girish", isActive: true },
-    { name: "Pawan Verma", email: "pawan.verma@gyoash.com", password: "pawan@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: "https://i.pravatar.cc/150?u=pawan", isActive: true },
   ];
 
   const createdUsers: Record<string, any> = {};

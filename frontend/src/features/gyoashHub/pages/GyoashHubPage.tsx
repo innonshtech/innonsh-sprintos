@@ -1027,7 +1027,7 @@ function DetailedScopeContractBreakdown() {
               <tr className="hover:bg-muted/20">
                 <td className="p-3 font-bold text-amber-600 dark:text-amber-400">GYOASH Technologies</td>
                 <td className="p-3 text-muted-foreground">Client & Product Owner</td>
-                <td className="p-3 font-semibold text-foreground">Pawan Verma (Product Owner)</td>
+                <td className="p-3 font-semibold text-foreground">Sanju Verma (Product Owner)</td>
                 <td className="p-3"><Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 font-bold">Approved & Formalized</Badge></td>
               </tr>
             </tbody>
