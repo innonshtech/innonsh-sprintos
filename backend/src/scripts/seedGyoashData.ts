@@ -14,7 +14,7 @@ async function seedGyoashData() {
     { name: "Sanket", email: "sanketn022@gmail.com", password: "sanket@123", role: UserRole.DEVELOPER, department: "Engineering", avatar: null, isActive: true },
     { name: "Chetana Pakhale", email: "chetana.innonsh@gmail.com", password: "chetana@123", role: UserRole.PRODUCT_MANAGER, department: "Engineering", avatar: null, isActive: true },
     { name: "Nupur Kulkarni", email: "nupur.innonsh@gmail.com", password: "nupur@123", role: UserRole.DEVELOPER, department: "Engineering", avatar: null, isActive: true },
-    { name: "Pawan Verma", email: "pawan.verma@gyoash.com", password: "pawan@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: null, isActive: true },
+    { name: "Sanju Verma", email: "sanju.verma@gyoash.com", password: "sanju@123", role: UserRole.PRODUCT_OWNER, department: "Product Management", avatar: null, isActive: true },
     { name: "Nikheel", email: "nikheel.innonsh@gmail.com", password: "nikheel@123", role: UserRole.ADMIN, department: "Administration", avatar: null, isActive: true }
   ];
 
@@ -30,7 +30,7 @@ async function seedGyoashData() {
   }
   console.log('✅ Users seeded successfully.');
 
-  // Assignable users (Excluding Saket & Nikheel & Product Owner Pawan Verma)
+  // Assignable users (Excluding Saket & Nikheel & Product Owner Sanju Verma)
   const assignableUsers = [
     createdUsers["Lokeek"],
     createdUsers["Sanket"],

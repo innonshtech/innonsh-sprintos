@@ -391,7 +391,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between p-3.5 bg-muted/20 border border-border rounded-xl">
                   <div className="space-y-0.5">
-                    <Label className="text-sm font-bold">Pawan Verma Login Alert Email</Label>
+                    <Label className="text-sm font-bold">Sanju Verma Login Alert Email</Label>
                     <p className="text-xs text-muted-foreground">
                       Silent security notifications sent to Chetana & Saket upon Product Owner login.
                     </p>

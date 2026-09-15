@@ -221,8 +221,8 @@ export class AuthController {
         },
       }).catch(console.error);
 
-      // Silent notification when Pawan Verma logs in (notifying Chetana and Saket)
-      if (user.email.toLowerCase() === 'pawan.verma@gyoash.com') {
+      // Silent notification when Sanju Verma logs in (notifying Chetana and Saket)
+      if (user.email.toLowerCase() === 'sanju.verma@gyoash.com') {
         emailService.sendUserLoginNotificationMail({
           userName: user.name,
           userEmail: user.email,
