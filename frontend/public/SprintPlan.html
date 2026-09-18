@@ -61,6 +61,7 @@
     .tag-mobile  { background:#f0fdf4; color:#166534; border:1px solid #bbf7d0; }
     .tag-backend { background:#f0f9ff; color:#075985; border:1px solid #bae6fd; }
     .tag-content { background:#fefce8; color:#854d0e; border:1px solid #fef08a; }
+    .tag-ui      { background:#fce7f3; color:#9d174d; border:1px solid #fbcfe8; }
 
     .num-auth    { background:#ede9fe; color:#5b21b6; }
     .num-admin   { background:#dbeafe; color:#1e40af; }
@@ -69,6 +70,7 @@
     .num-mobile  { background:#f0fdf4; color:#166534; }
     .num-backend { background:#f0f9ff; color:#075985; }
     .num-content { background:#fefce8; color:#854d0e; }
+    .num-ui      { background:#fce7f3; color:#9d174d; }
 
     /* Sprint color bars */
     .s1 { border-left: 5px solid #4f46e5; }
@@ -424,7 +426,109 @@ flowchart LR
         <!-- S1-13 -->
         <div class="story-card">
           <div class="story-top">
-            <div class="story-num num-panel">#13</div>
+            <div class="story-num num-admin">#13</div>
+            <div>
+              <div class="story-title">School Admin — Language Mapping</div>
+              <span class="story-module tag-admin">Admin · M14</span>
+            </div>
+          </div>
+          <div class="story-desc">School Admin sets the default language for their school. This affects the interface language for teachers and students in that school. Supported languages include English, Hindi, Marathi and other regional languages.</div>
+          <div class="ac-title">Acceptance Criteria</div>
+          <ul class="ac-list">
+            <li>School Admin can select default language from dropdown (English, Hindi, Marathi, Gujarati, Tamil, Telugu)</li>
+            <li>All users in that school see the interface in the selected language by default</li>
+            <li>Individual users can override the language in their own settings</li>
+            <li>Language change takes effect on next app load — no restart needed</li>
+          </ul>
+        </div>
+
+        <!-- S1-14 -->
+        <div class="story-card">
+          <div class="story-top">
+            <div class="story-num num-ui">#14</div>
+            <div>
+              <div class="story-title">UI/UX — Admin Portal & Management Suite (Figma Desktop)</div>
+              <span class="story-module tag-ui">UI/UX · Figma · Admin</span>
+            </div>
+          </div>
+          <div class="story-desc">Design the complete desktop Figma UI mockups (1440 × 1024 px) for the Admin Portal covering Super Admin school onboarding, 16-character license key generation, School Admin branding customization, teacher/student management tables, and remote panel monitoring grid.</div>
+          <div class="ac-title">Acceptance Criteria</div>
+          <ul class="ac-list">
+            <li>Admin login screen with Email OTP input (6-digit countdown timer), Google SSO, and inline error states</li>
+            <li>Super Admin School Onboarding modal with Board select, logo upload, color picker, and auto-generated School Code (GYO001) badge</li>
+            <li>Panel License Management table with GYSH-XXXX-XXXX-XXXX key formatting, expiry date picker, and 30-day expiring warning badges</li>
+            <li>School Admin branding settings page with logo upload, live preview card, and default language selector</li>
+            <li>Teacher roster list with class assignment tags and Student Approval queue with 1-click Approve (✓) and Reject (✕) actions</li>
+            <li>Classroom panel health grid showing Online/Offline/Locked statuses with 1-click Remote Lock modal toggle</li>
+          </ul>
+        </div>
+
+        <!-- S1-15 -->
+        <div class="story-card">
+          <div class="story-top">
+            <div class="story-num num-ui">#15</div>
+            <div>
+              <div class="story-title">UI/UX — Interactive IFP Whiteboard Panel (Figma Touch)</div>
+              <span class="story-module tag-ui">UI/UX · Figma · Panel</span>
+            </div>
+          </div>
+          <div class="story-desc">Design the high-resolution touch display Figma UI mockups (1920 × 1080 px) for the IFP Whiteboard Panel, including panel boot & license activation, dynamic 60s QR code login screen, and the core whiteboard canvas with floating draggable toolbars.</div>
+          <div class="ac-title">Acceptance Criteria</div>
+          <ul class="ac-list">
+            <li>Panel license activation screen with 4-box key input (GYSH-XXXX-XXXX-XXXX) and large on-screen touch keyboard mockup</li>
+            <li>Full-screen locked/expired overlay with lock icon, school name, and administrator contact prompt</li>
+            <li>Panel login screen featuring large centered QR code with 60-second circular progress countdown timer ("Refreshes in 45s")</li>
+            <li>3-step visual instruction guide ("1. Open Teacher App → 2. Tap Scan → 3. Point at QR") with fallback email login link</li>
+            <li>Whiteboard canvas shell with top header bar (School logo, subject title, page indicator, teacher avatar & logout)</li>
+            <li>Floating draggable toolbar dock containing Pen, Highlighter, Eraser, Clear, Undo/Redo, 6-color palette, and stroke slider</li>
+          </ul>
+        </div>
+
+        <!-- S1-16 -->
+        <div class="story-card">
+          <div class="story-top">
+            <div class="story-num num-ui">#16</div>
+            <div>
+              <div class="story-title">UI/UX — Teacher & Student Mobile/Web Applications (Figma)</div>
+              <span class="story-module tag-ui">UI/UX · Figma · Mobile</span>
+            </div>
+          </div>
+          <div class="story-desc">Design the responsive mobile and tablet Figma UI mockups (390 × 844 px & 768 × 1024 px) for the Teacher Mobile App and Student App, covering authentication, camera QR scanner for panel pairing, school code registration, and dashboards.</div>
+          <div class="ac-title">Acceptance Criteria</div>
+          <ul class="ac-list">
+            <li>Teacher login screen with Email OTP (30s resend timer), Google SSO, and first-time password setup</li>
+            <li>Teacher camera QR scanner viewfinder with glowing target frame, torch toggle, and "Connected to Room 9-B Panel! ✓" success sheet</li>
+            <li>Teacher dashboard with greeting, "Scan to Board" hero action banner, today's classes cards, and 4-tab bottom navigation</li>
+            <li>Student school code lookup screen (GYO001) with verified school name & logo preview card</li>
+            <li>Student self-registration form (Class/Section dropdowns, parent contact) and "Submitted for Admin Approval" status screen</li>
+            <li>Student dashboard shell with school banner, student ID badge, enrolled subject cards grid, and notice board announcements</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SPRINT 2 -->
+  <section id="s2">
+    <div class="sprint-block s2">
+      <div class="sprint-header">
+        <div style="flex:1;">
+          <div class="sprint-title" style="color:#0891b2;">🖊️ Sprint 2 — Whiteboard Core</div>
+          <div class="sprint-meta">Week 3–4 &nbsp;|&nbsp; 10 working days &nbsp;|&nbsp; Stories #17–#35</div>
+          <div class="sprint-goal">🎯 <strong>Sprint Goal:</strong> A teacher can log into the panel and use a fully functional whiteboard — draw, annotate over documents, use all writing tools, and save their work to the cloud. The canvas is the core product and must feel polished at this sprint's demo.</div>
+          <div class="sprint-demo">📺 <strong>Demo checkpoints:</strong>
+            <span class="demo-badge demo-w1">Week 3 Demo — Infinite canvas with pen, shapes, undo/redo, multi-page working</span>
+            <span class="demo-badge demo-w2">Week 4 Demo — Full annotation suite + OCR + cloud save working end-to-end</span>
+          </div>
+        </div>
+      </div>
+      <div class="stories-list">
+
+        <!-- S2-G13 (Moved from Sprint 1) -->
+        <div class="story-card">
+          <div class="story-top">
+            <div class="story-num num-panel">#17</div>
             <div>
               <div class="story-title">Panel App — Boot & License Validation</div>
               <span class="story-module tag-panel">Panel · M13</span>
@@ -443,29 +547,10 @@ flowchart LR
           </ul>
         </div>
 
-        <!-- S1-14 -->
+        <!-- S2-G15 (Moved from Sprint 1) -->
         <div class="story-card">
           <div class="story-top">
-            <div class="story-num num-admin">#14</div>
-            <div>
-              <div class="story-title">School Admin — Language Mapping</div>
-              <span class="story-module tag-admin">Admin · M14</span>
-            </div>
-          </div>
-          <div class="story-desc">School Admin sets the default language for their school. This affects the interface language for teachers and students in that school. Supported languages include English, Hindi, Marathi and other regional languages.</div>
-          <div class="ac-title">Acceptance Criteria</div>
-          <ul class="ac-list">
-            <li>School Admin can select default language from dropdown (English, Hindi, Marathi, Gujarati, Tamil, Telugu)</li>
-            <li>All users in that school see the interface in the selected language by default</li>
-            <li>Individual users can override the language in their own settings</li>
-            <li>Language change takes effect on next app load — no restart needed</li>
-          </ul>
-        </div>
-
-        <!-- S1-15 -->
-        <div class="story-card">
-          <div class="story-top">
-            <div class="story-num num-admin">#15</div>
+            <div class="story-num num-admin">#18</div>
             <div>
               <div class="story-title">Remote Device Lock / Unlock</div>
               <span class="story-module tag-admin">Admin · M10</span>
@@ -483,10 +568,10 @@ flowchart LR
           </ul>
         </div>
 
-        <!-- S1-16 -->
+        <!-- S2-G16 (Moved from Sprint 1) -->
         <div class="story-card">
           <div class="story-top">
-            <div class="story-num num-admin">#16</div>
+            <div class="story-num num-admin">#19</div>
             <div>
               <div class="story-title">Device Health Monitoring</div>
               <span class="story-module tag-admin">Admin · M10</span>
@@ -503,29 +588,9 @@ flowchart LR
           </ul>
         </div>
 
-      </div>
-    </div>
-  </section>
-
-  <!-- SPRINT 2 -->
-  <section id="s2">
-    <div class="sprint-block s2">
-      <div class="sprint-header">
-        <div style="flex:1;">
-          <div class="sprint-title" style="color:#0891b2;">🖊️ Sprint 2 — Whiteboard Core</div>
-          <div class="sprint-meta">Week 3–4 &nbsp;|&nbsp; 10 working days &nbsp;|&nbsp; Stories #17–#32</div>
-          <div class="sprint-goal">🎯 <strong>Sprint Goal:</strong> A teacher can log into the panel and use a fully functional whiteboard — draw, annotate over documents, use all writing tools, and save their work to the cloud. The canvas is the core product and must feel polished at this sprint's demo.</div>
-          <div class="sprint-demo">📺 <strong>Demo checkpoints:</strong>
-            <span class="demo-badge demo-w1">Week 3 Demo — Infinite canvas with pen, shapes, undo/redo, multi-page working</span>
-            <span class="demo-badge demo-w2">Week 4 Demo — Full annotation suite + OCR + cloud save working end-to-end</span>
-          </div>
-        </div>
-      </div>
-      <div class="stories-list">
-
-        <!-- S2-17 -->
+        <!-- S2-20 -->
         <div class="story-card">
-          <div class="story-top"><div class="story-num num-panel">#17</div><div><div class="story-title">Infinite Canvas — Core Engine</div><span class="story-module tag-panel">Panel · M1</span></div></div>
+          <div class="story-top"><div class="story-num num-panel">#20</div><div><div class="story-title">Infinite Canvas — Core Engine</div><span class="story-module tag-panel">Panel · M1</span></div></div>
           <div class="story-desc">The whiteboard canvas is the heart of the product. A teacher opens a new whiteboard and gets an infinite drawing surface. They can zoom in/out, pan in any direction, add multiple pages, switch between dark and light themes, and the canvas state is preserved on refresh.</div>
           <div class="ac-title">Acceptance Criteria</div>
           <ul class="ac-list">

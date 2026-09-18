@@ -112,7 +112,7 @@ export class DashboardRepository {
 
   async getTotalActiveTasksCount() {
     return prisma.task.count({
-      where: { status: { not: 'DONE' } }
+      where: { status: { in: ['IN_PROGRESS', 'IN_REVIEW', 'IN_TESTING'] } }
     });
   }
 }

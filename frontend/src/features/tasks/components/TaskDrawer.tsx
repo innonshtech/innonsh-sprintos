@@ -17,18 +17,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { 
   MessageSquare, 
-  Paperclip, 
   Activity, 
   CheckCircle2, 
-  AlertTriangle,
-  Plus,
-  ListTodo,
-  MoreVertical,
-  Trash,
-  Archive,
-  RefreshCw,
-  CheckCircle,
-  UserCheck
+  AlertTriangle, 
+  Plus, 
+  ListTodo, 
+  MoreVertical, 
+  Trash, 
+  Archive, 
+  RefreshCw 
 } from 'lucide-react';
 import TaskComments from './TaskComments';
 import TaskActivityTimeline from './TaskActivityTimeline';
@@ -85,7 +82,10 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const reporter = task.creator || availableMembers.find((m: any) => m.id === task.creatorId) || TEAM_MEMBERS.find(m => m.id === task.creatorId);
   const blocker = task.blockers?.find((b: any) => !b.isResolved);
 
-  const canEdit = user?.role === 'PRODUCT_MANAGER' || user?.id === task.assigneeId;
+  const isHighAuthority = user?.role === 'ADMIN' || user?.role === 'PRODUCT_MANAGER' || user?.role === 'PRODUCT_OWNER';
+  const isMyTask = user?.id === task.assigneeId;
+  const canEditStatus = isHighAuthority || isMyTask;
+  const canEditDetails = isHighAuthority;
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     updateTaskStatus.mutate({ id: task.id, status: e.target.value });
@@ -126,9 +126,30 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 {task.isArchived && (
                   <Badge variant="secondary" className="bg-slate-200 text-slate-700">Archived</Badge>
                 )}
-                <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                  {task.priority}
-                </Badge>
+                {canEditDetails ? (
+                  <select
+                    value={task.priority || 'MEDIUM'}
+                    onChange={(e) => {
+                      const newPriority = e.target.value;
+                      updateTask.mutate({ id: task.id, priority: newPriority }, {
+                        onSuccess: () => {
+                          toast({ title: 'Priority Updated', description: `Task priority set to ${newPriority}` });
+                        }
+                      });
+                    }}
+                    className={`text-xs font-semibold px-2 py-1 rounded-md border cursor-pointer outline-none ${getPriorityColor(task.priority || 'MEDIUM')} bg-background`}
+                  >
+                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="URGENT">URGENT</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                  </select>
+                ) : (
+                  <Badge variant="outline" className={getPriorityColor(task.priority || 'MEDIUM')}>
+                    {task.priority || 'MEDIUM'}
+                  </Badge>
+                )}
                 
                 {user?.role === 'PRODUCT_MANAGER' && (
                   <DropdownMenu>
@@ -171,10 +192,10 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
             </SheetTitle>
             
             <div className="flex items-center gap-4">
-              {canEdit ? (
+              {canEditStatus ? (
                 <select 
                   className="text-sm border rounded-md px-3 py-1.5 bg-background font-medium focus:ring-2 focus:ring-indigo-500 outline-none"
-                  value={task.status}
+                  value={task.status || 'TODO'}
                   onChange={handleStatusChange}
                 >
                   <option value="TODO">TO DO</option>
@@ -185,8 +206,8 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                   <option value="DONE">DONE</option>
                 </select>
               ) : (
-                <Badge variant={task.status === 'DONE' ? 'default' : 'secondary'} className={task.status === 'DONE' ? 'bg-emerald-500' : ''}>
-                  {task.status.replace('_', ' ')}
+                <Badge variant={(task.status || '') === 'DONE' ? 'default' : 'secondary'} className={(task.status || '') === 'DONE' ? 'bg-emerald-500' : ''}>
+                  {(task.status || 'TODO').replace(/_/g, ' ')}
                 </Badge>
               )}
               
@@ -216,7 +237,26 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 <section>
                   <h3 className="text-sm font-semibold text-foreground mb-3">Acceptance Criteria</h3>
                   <div className="text-sm text-foreground/90 leading-relaxed p-4 bg-muted/20 rounded-lg border border-border/50 whitespace-pre-wrap">
-                    {task.acceptanceCriteria}
+                    {(() => {
+                      try {
+                        const parsed = JSON.parse(task.acceptanceCriteria);
+                        if (Array.isArray(parsed)) {
+                          return (
+                            <ul className="space-y-1 list-none">
+                              {parsed.map((item: string, i: number) => (
+                                <li key={i} className="flex items-start gap-2">
+                                  <span className="text-emerald-500 font-bold mt-0.5">✓</span>
+                                  <span>{item}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          );
+                        }
+                      } catch {
+                        // not JSON, render as plain text
+                      }
+                      return <span>{String(task.acceptanceCriteria)}</span>;
+                    })()}
                   </div>
                 </section>
               )}
@@ -234,13 +274,13 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                         checked={st.isCompleted} 
                         onChange={(e) => updateSubtask.mutate({ id: st.id, isCompleted: e.target.checked })}
                         className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        disabled={!canEdit}
+                        disabled={!canEditStatus}
                       />
                       <span className={`text-sm flex-1 ${st.isCompleted ? 'line-through text-muted-foreground' : ''}`}>{st.title}</span>
                     </div>
                   ))}
                   
-                  {canEdit && (
+                  {canEditStatus && (
                     <form onSubmit={handleAddSubtask} className="flex items-center gap-2 mt-2">
                       <Input 
                         placeholder="What needs to be done?" 
@@ -368,11 +408,11 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                       {assignee && (
                         <Avatar className={`w-7 h-7 border-2 shrink-0 ${assignee.color ? `border-${assignee.color}-500` : 'border-border'}`}>
                           <AvatarImage src={assignee.avatar} />
-                          <AvatarFallback className="text-[10px]">{assignee.name.charAt(0)}</AvatarFallback>
+                          <AvatarFallback className="text-[10px]">{assignee.name?.charAt(0) || '?'}</AvatarFallback>
                         </Avatar>
                       )}
                       
-                      {canEdit ? (
+                      {canEditDetails ? (
                         <select
                           className="w-full text-xs border rounded-md px-2.5 py-1.5 bg-background font-medium focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
                           value={task.assigneeId || ''}
@@ -392,7 +432,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                           <option value="">Unassigned</option>
                           {assignableMembers.map((m: any) => (
                             <option key={m.id} value={m.id}>
-                              {m.name} ({m.role.replace('_', ' ')})
+                              {m.name} ({(m.role || '').replace(/_/g, ' ')})
                             </option>
                           ))}
                         </select>
@@ -409,9 +449,9 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                         <>
                           <Avatar className="w-6 h-6 border border-border">
                             <AvatarImage src={reporter.avatar} />
-                            <AvatarFallback className="text-[10px]">{reporter.name.charAt(0)}</AvatarFallback>
+                            <AvatarFallback className="text-[10px]">{reporter.name?.charAt(0) || '?'}</AvatarFallback>
                           </Avatar>
-                          <span className="text-sm font-medium">{reporter.name}</span>
+                          <span className="text-sm font-medium">{reporter.name || 'Unknown'}</span>
                         </>
                       ) : (
                         <span className="text-sm text-muted-foreground">System</span>
@@ -443,7 +483,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                     </div>
                   )}
 
-                  {task.labels?.length > 0 && (
+                  {Array.isArray(task.labels) && task.labels.length > 0 && (
                     <div>
                       <span className="text-xs text-muted-foreground block mb-1.5">Labels</span>
                       <div className="flex flex-wrap gap-1">
@@ -466,7 +506,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Open in Chat
                       </Button>
-                      {canEdit && task.status !== 'DONE' && (
+                      {canEditStatus && task.status !== 'DONE' && (
                         <Button 
                           variant="outline" 
                           size="sm" 

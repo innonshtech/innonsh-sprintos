@@ -43,10 +43,27 @@ export const useCreateTask = () => {
   });
 };
 
+type TaskUpdatePayload = {
+  id: string;
+  title?: string;
+  description?: string | null;
+  status?: string;
+  priority?: string;
+  storyPoints?: number | null;
+  assigneeId?: string | null;
+  sprintId?: string | null;
+  dueDate?: string | null;
+  startDate?: string | null;
+  labels?: string[];
+  acceptanceCriteria?: string | null;
+  isArchived?: boolean;
+  [key: string]: unknown;
+};
+
 export const useUpdateTask = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updateData }: Partial<Task> & { id: string }) => {
+    mutationFn: async ({ id, ...updateData }: TaskUpdatePayload) => {
       const { data } = await api.put(`/tasks/${id}`, updateData);
       return data;
     },

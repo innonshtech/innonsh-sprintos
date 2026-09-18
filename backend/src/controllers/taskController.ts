@@ -189,16 +189,27 @@ export const updateTask = async (req: Request, res: Response) => {
     const dbUser = user?.id ? await prisma.user.findUnique({ where: { id: user.id } }) : null;
     const performerName = dbUser?.name || 'Saket';
 
-    if (user && user.role !== 'PRODUCT_MANAGER' && existingTask.assigneeId !== user.id) {
-      return res.status(403).json({ error: 'Forbidden: You can only edit your own assigned tasks' });
+    const isLeadOrAdmin = user && (user.role === 'ADMIN' || user.role === 'PRODUCT_MANAGER' || user.role === 'PRODUCT_OWNER');
+    if (user && !isLeadOrAdmin && existingTask.assigneeId !== user.id) {
+      return res.status(403).json({ error: 'Forbidden: You can only update your own assigned tasks' });
     }
 
     const { title, description, type, status, priority, storyPoints, sprintId, assigneeId, dueDate, startDate, acceptanceCriteria, labels } = req.body;
 
     const dataToUpdate: any = {};
-    if (title !== undefined) dataToUpdate.title = title;
-    if (description !== undefined) dataToUpdate.description = description;
-    if (type !== undefined) dataToUpdate.type = type;
+    if (isLeadOrAdmin) {
+      if (title !== undefined) dataToUpdate.title = title;
+      if (description !== undefined) dataToUpdate.description = description;
+      if (type !== undefined) dataToUpdate.type = type;
+      if (priority !== undefined) dataToUpdate.priority = priority;
+      if (storyPoints !== undefined) dataToUpdate.storyPoints = storyPoints ? parseInt(storyPoints) : null;
+      if (sprintId !== undefined) dataToUpdate.sprintId = sprintId;
+      if (assigneeId !== undefined) dataToUpdate.assigneeId = assigneeId;
+      if (dueDate !== undefined) dataToUpdate.dueDate = dueDate ? new Date(dueDate) : null;
+      if (startDate !== undefined) dataToUpdate.startDate = startDate ? new Date(startDate) : null;
+    }
+
+    // Developers can update status, acceptance criteria, and labels on their assigned tasks
     const fromInReviewToDone = (existingTask.status === 'IN_REVIEW' && status === 'DONE');
     if (status !== undefined) {
       dataToUpdate.status = status;
@@ -207,12 +218,6 @@ export const updateTask = async (req: Request, res: Response) => {
         dataToUpdate.completedById = user?.id;
       }
     }
-    if (priority !== undefined) dataToUpdate.priority = priority;
-    if (storyPoints !== undefined) dataToUpdate.storyPoints = storyPoints ? parseInt(storyPoints) : null;
-    if (sprintId !== undefined) dataToUpdate.sprintId = sprintId;
-    if (assigneeId !== undefined) dataToUpdate.assigneeId = assigneeId;
-    if (dueDate !== undefined) dataToUpdate.dueDate = dueDate ? new Date(dueDate) : null;
-    if (startDate !== undefined) dataToUpdate.startDate = startDate ? new Date(startDate) : null;
     if (acceptanceCriteria !== undefined) dataToUpdate.acceptanceCriteria = acceptanceCriteria;
     if (labels !== undefined) dataToUpdate.labels = labels;
 

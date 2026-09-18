@@ -28,6 +28,7 @@ import {
   useUserStoryHistory 
 } from '../api/userStoriesApi';
 import type { UserStory } from '../types/userStory';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { toast } from 'react-hot-toast';
 
 const COLUMN_DEFINITIONS = [
@@ -86,6 +87,10 @@ export default function UserStoriesPage() {
   // Single Row Delete Confirmation Modal state
   const [storyToDelete, setStoryToDelete] = useState<UserStory | null>(null);
 
+  // Auth & Permissions
+  const { user } = useAuthStore();
+  const isHighAuthority = user?.role === 'ADMIN' || user?.role === 'PRODUCT_MANAGER' || user?.role === 'PRODUCT_OWNER';
+
   // API Queries & Mutations
   const { data: userStories = [], isLoading, refetch } = useUserStories({
     search: searchTerm,
@@ -132,6 +137,10 @@ export default function UserStoriesPage() {
 
   // Start cell edit
   const handleStartEdit = (story: UserStory, key: string) => {
+    if (!isHighAuthority) {
+      toast.error('Only Product Managers and Admins can edit User Stories', { duration: 2000 });
+      return;
+    }
     setEditingCell({ id: story.id, key });
     setCellValue(String((story as any)[key] ?? ''));
   };
@@ -374,31 +383,37 @@ export default function UserStoriesPage() {
 
           {/* Perfectly Aligned Horizontal Action Controls Bar */}
           <div className="flex items-center gap-2 overflow-x-auto py-1">
-            {/* Add Row Button */}
-            <button
-              onClick={handleAddRow}
-              disabled={createStoryMutation.isPending}
-              className="h-9 flex items-center gap-1.5 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all hover:scale-[1.02] shadow-sm flex-shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Row</span>
-            </button>
+            {/* Add Row Button - High Authority Only */}
+            {isHighAuthority && (
+              <button
+                onClick={handleAddRow}
+                disabled={createStoryMutation.isPending}
+                className="h-9 flex items-center gap-1.5 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition-all hover:scale-[1.02] shadow-sm flex-shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Row</span>
+              </button>
+            )}
 
-            {/* Import Excel */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept=".xlsx, .xls, .csv"
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="h-9 flex items-center gap-1.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-all hover:scale-[1.02] shadow-sm flex-shrink-0"
-            >
-              <Upload className="w-4 h-4" />
-              <span>Import Excel</span>
-            </button>
+            {/* Import Excel - High Authority Only */}
+            {isHighAuthority && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".xlsx, .xls, .csv"
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-9 flex items-center gap-1.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-all hover:scale-[1.02] shadow-sm flex-shrink-0"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Import Excel</span>
+                </button>
+              </>
+            )}
 
             {/* Export Excel */}
             <button
@@ -409,8 +424,8 @@ export default function UserStoriesPage() {
               <span>Export Excel</span>
             </button>
 
-            {/* Clear All Stories Button */}
-            {userStories.length > 0 && (
+            {/* Clear All Stories Button - High Authority Only */}
+            {isHighAuthority && userStories.length > 0 && (
               <button
                 onClick={() => setIsClearAllModalOpen(true)}
                 className="h-9 flex items-center gap-1.5 px-3.5 bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg text-xs font-semibold transition-colors border border-red-500/20 flex-shrink-0"
@@ -643,13 +658,15 @@ export default function UserStoriesPage() {
                                 <ExternalLink className="w-3 h-3 text-muted-foreground" />
                               </a>
                             </div>
-                          ) : (
+                          ) : isHighAuthority ? (
                             <span 
                               onClick={() => handleStartEdit(story, col.key)}
                               className="text-indigo-500/70 italic cursor-pointer hover:underline font-medium inline-flex items-center gap-1"
                             >
                               + Add Figma Link
                             </span>
+                          ) : (
+                            <span className="text-muted-foreground italic">-</span>
                           )}
                         </td>
                       );
@@ -659,26 +676,32 @@ export default function UserStoriesPage() {
                     if (col.key === 'figmaStatus') {
                       return (
                         <td key={col.key} className={`p-3 border-r border-border ${col.minWidth}`}>
-                          <select
-                            value={story.figmaStatus || 'PENDING'}
-                            onChange={async (e) => {
-                              try {
-                                await updateStoryMutation.mutateAsync({
-                                  id: story.id,
-                                  data: { figmaStatus: e.target.value },
-                                });
-                                toast.success('Changes saved successfully', { duration: 600 });
-                              } catch {
-                                toast.error('Failed to update status', { duration: 600 });
-                              }
-                            }}
-                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border focus:outline-none cursor-pointer ${getFigmaStatusBadge(story.figmaStatus)}`}
-                          >
-                            <option value="PENDING">PENDING</option>
-                            <option value="IN_PROGRESS">IN_PROGRESS</option>
-                            <option value="APPROVED">APPROVED</option>
-                            <option value="DONE">DONE</option>
-                          </select>
+                          {isHighAuthority ? (
+                            <select
+                              value={story.figmaStatus || 'PENDING'}
+                              onChange={async (e) => {
+                                try {
+                                  await updateStoryMutation.mutateAsync({
+                                    id: story.id,
+                                    data: { figmaStatus: e.target.value },
+                                  });
+                                  toast.success('Changes saved successfully', { duration: 600 });
+                                } catch {
+                                  toast.error('Failed to update status', { duration: 600 });
+                                }
+                              }}
+                              className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border focus:outline-none cursor-pointer ${getFigmaStatusBadge(story.figmaStatus)}`}
+                            >
+                              <option value="PENDING">PENDING</option>
+                              <option value="IN_PROGRESS">IN_PROGRESS</option>
+                              <option value="APPROVED">APPROVED</option>
+                              <option value="DONE">DONE</option>
+                            </select>
+                          ) : (
+                            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border inline-block ${getFigmaStatusBadge(story.figmaStatus)}`}>
+                              {story.figmaStatus || 'PENDING'}
+                            </span>
+                          )}
                         </td>
                       );
                     }
@@ -687,27 +710,33 @@ export default function UserStoriesPage() {
                     if (col.key === 'itStatus') {
                       return (
                         <td key={col.key} className={`p-3 border-r border-border ${col.minWidth}`}>
-                          <select
-                            value={story.itStatus || 'BACKLOG'}
-                            onChange={async (e) => {
-                              try {
-                                await updateStoryMutation.mutateAsync({
-                                  id: story.id,
-                                  data: { itStatus: e.target.value },
-                                });
-                                toast.success('Changes saved successfully', { duration: 600 });
-                              } catch {
-                                toast.error('Failed to update status', { duration: 600 });
-                              }
-                            }}
-                            className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border focus:outline-none cursor-pointer ${getITStatusBadge(story.itStatus)}`}
-                          >
-                            <option value="BACKLOG">BACKLOG</option>
-                            <option value="IN_DEVELOPMENT">IN_DEVELOPMENT</option>
-                            <option value="TESTING">TESTING</option>
-                            <option value="DEPLOYED">DEPLOYED</option>
-                            <option value="DONE">DONE</option>
-                          </select>
+                          {isHighAuthority ? (
+                            <select
+                              value={story.itStatus || 'BACKLOG'}
+                              onChange={async (e) => {
+                                try {
+                                  await updateStoryMutation.mutateAsync({
+                                    id: story.id,
+                                    data: { itStatus: e.target.value },
+                                  });
+                                  toast.success('Changes saved successfully', { duration: 600 });
+                                } catch {
+                                  toast.error('Failed to update status', { duration: 600 });
+                                }
+                              }}
+                              className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border focus:outline-none cursor-pointer ${getITStatusBadge(story.itStatus)}`}
+                            >
+                              <option value="BACKLOG">BACKLOG</option>
+                              <option value="IN_DEVELOPMENT">IN_DEVELOPMENT</option>
+                              <option value="TESTING">TESTING</option>
+                              <option value="DEPLOYED">DEPLOYED</option>
+                              <option value="DONE">DONE</option>
+                            </select>
+                          ) : (
+                            <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border inline-block ${getITStatusBadge(story.itStatus)}`}>
+                              {story.itStatus || 'BACKLOG'}
+                            </span>
+                          )}
                         </td>
                       );
                     }
@@ -716,8 +745,8 @@ export default function UserStoriesPage() {
                     return (
                       <td 
                         key={col.key} 
-                        onClick={() => !isEditing && handleStartEdit(story, col.key)}
-                        className={`p-3 border-r border-border ${col.minWidth} cursor-pointer hover:bg-indigo-500/5 transition-colors relative group/cell`}
+                        onClick={() => isHighAuthority && !isEditing && handleStartEdit(story, col.key)}
+                        className={`p-3 border-r border-border ${col.minWidth} ${isHighAuthority ? 'cursor-pointer hover:bg-indigo-500/5' : ''} transition-colors relative group/cell`}
                       >
                         {isEditing ? (
                           <div className="flex items-center gap-1.5 w-full">
@@ -817,16 +846,18 @@ export default function UserStoriesPage() {
                         <History className="w-4 h-4" />
                       </button>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setStoryToDelete(story);
-                        }}
-                        className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
-                        title="Delete User Story"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isHighAuthority && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setStoryToDelete(story);
+                          }}
+                          className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+                          title="Delete User Story"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

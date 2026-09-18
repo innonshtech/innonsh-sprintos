@@ -114,8 +114,21 @@ export const getUserStoryById = async (req: Request, res: Response) => {
   }
 };
 
+const checkAuthority = (req: Request, res: Response): boolean => {
+  const role = req.user?.role;
+  if (role !== 'ADMIN' && role !== 'PRODUCT_MANAGER' && role !== 'PRODUCT_OWNER') {
+    res.status(403).json({
+      success: false,
+      message: 'Forbidden: Only Product Managers, Product Owners, and Admins can modify User Stories',
+    });
+    return false;
+  }
+  return true;
+};
+
 export const createUserStory = async (req: Request, res: Response) => {
   try {
+    if (!checkAuthority(req, res)) return;
     const userId = req.user?.id;
     const data = req.body;
 
@@ -170,6 +183,7 @@ export const createUserStory = async (req: Request, res: Response) => {
 
 export const updateUserStory = async (req: Request, res: Response) => {
   try {
+    if (!checkAuthority(req, res)) return;
     const { id } = req.params;
     const userId = req.user?.id;
     const updates = req.body;
@@ -249,6 +263,7 @@ export const updateUserStory = async (req: Request, res: Response) => {
 
 export const deleteUserStory = async (req: Request, res: Response) => {
   try {
+    if (!checkAuthority(req, res)) return;
     const { id } = req.params;
 
     const existingStory = await (prisma as any).userStory.findUnique({
@@ -281,12 +296,13 @@ export const deleteUserStory = async (req: Request, res: Response) => {
 
 export const clearAllUserStories = async (req: Request, res: Response) => {
   try {
+    if (!checkAuthority(req, res)) return;
     await (prisma as any).userStoryHistory.deleteMany({});
     await (prisma as any).userStory.deleteMany({});
 
     res.status(200).json({
       success: true,
-      message: 'Successfully deleted all user stories and audit history',
+      message: 'All user stories and history cleared successfully',
     });
   } catch (error: any) {
     console.error('Error clearing user stories:', error);
@@ -299,6 +315,7 @@ export const clearAllUserStories = async (req: Request, res: Response) => {
 
 export const bulkImportUserStories = async (req: Request, res: Response) => {
   try {
+    if (!checkAuthority(req, res)) return;
     const userId = req.user?.id;
     const { stories } = req.body;
 
