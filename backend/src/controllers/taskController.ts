@@ -189,7 +189,8 @@ export const updateTask = async (req: Request, res: Response) => {
     const dbUser = user?.id ? await prisma.user.findUnique({ where: { id: user.id } }) : null;
     const performerName = dbUser?.name || 'Saket';
 
-    if (user && user.role !== 'PRODUCT_MANAGER' && existingTask.assigneeId !== user.id) {
+    const isLeadOrAdmin = user && (user.role === 'ADMIN' || user.role === 'PRODUCT_MANAGER' || user.role === 'PRODUCT_OWNER');
+    if (user && !isLeadOrAdmin && existingTask.assigneeId !== user.id) {
       return res.status(403).json({ error: 'Forbidden: You can only edit your own assigned tasks' });
     }
 

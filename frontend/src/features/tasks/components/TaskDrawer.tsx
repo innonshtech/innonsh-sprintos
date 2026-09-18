@@ -85,7 +85,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const reporter = task.creator || availableMembers.find((m: any) => m.id === task.creatorId) || TEAM_MEMBERS.find(m => m.id === task.creatorId);
   const blocker = task.blockers?.find((b: any) => !b.isResolved);
 
-  const canEdit = user?.role === 'PRODUCT_MANAGER' || user?.id === task.assigneeId;
+  const canEdit = user?.role === 'ADMIN' || user?.role === 'PRODUCT_MANAGER' || user?.role === 'PRODUCT_OWNER' || user?.id === task.assigneeId;
 
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     updateTaskStatus.mutate({ id: task.id, status: e.target.value });
@@ -126,9 +126,30 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                 {task.isArchived && (
                   <Badge variant="secondary" className="bg-slate-200 text-slate-700">Archived</Badge>
                 )}
-                <Badge variant="outline" className={getPriorityColor(task.priority)}>
-                  {task.priority}
-                </Badge>
+                {canEdit ? (
+                  <select
+                    value={task.priority}
+                    onChange={(e) => {
+                      const newPriority = e.target.value;
+                      updateTask.mutate({ id: task.id, priority: newPriority }, {
+                        onSuccess: () => {
+                          toast({ title: 'Priority Updated', description: `Task priority set to ${newPriority}` });
+                        }
+                      });
+                    }}
+                    className={`text-xs font-semibold px-2 py-1 rounded-md border cursor-pointer outline-none ${getPriorityColor(task.priority)} bg-background`}
+                  >
+                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="URGENT">URGENT</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                  </select>
+                ) : (
+                  <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                    {task.priority}
+                  </Badge>
+                )}
                 
                 {user?.role === 'PRODUCT_MANAGER' && (
                   <DropdownMenu>

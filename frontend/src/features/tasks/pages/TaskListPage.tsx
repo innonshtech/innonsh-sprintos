@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useTasks } from '../api/taskApi';
+import { useTasks, useUpdateTask } from '../api/taskApi';
 import { useProjects } from '@/features/projects/api/projectApi';
 import { AdvancedFilterPanel, initialFilterState } from '@/features/filters/AdvancedFilterPanel';
 import type { FilterState } from '@/features/filters/AdvancedFilterPanel';
@@ -12,9 +12,12 @@ import TaskDrawer from '../components/TaskDrawer';
 import { TEAM_MEMBERS } from '@/constants/teamMembers';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useTeam } from '@/features/team/api/teamApi';
+import { useToast } from '@/hooks/use-toast';
 
 export default function TaskListPage() {
   const { data: tasks = [], isLoading } = useTasks();
+  const updateTask = useUpdateTask();
+  const { toast } = useToast();
   const { data: projects = [] } = useProjects();
   const { data: realTeamMembers = [] } = useTeam();
   const { user } = useAuthStore();
@@ -268,10 +271,28 @@ export default function TaskListPage() {
                         {task.status.replace('_', ' ')}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-xs font-semibold ${getPriorityColor(task.priority)}`}>
-                        {task.priority}
-                      </span>
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                      <select
+                        value={task.priority}
+                        onChange={(e) => {
+                          const newPriority = e.target.value;
+                          updateTask.mutate({ id: task.id, priority: newPriority }, {
+                            onSuccess: () => {
+                              toast({
+                                title: 'Priority Updated',
+                                description: `${task.key} priority set to ${newPriority}`
+                              });
+                            }
+                          });
+                        }}
+                        className={`text-xs font-semibold px-2 py-1 rounded-md border cursor-pointer outline-none bg-background ${getPriorityColor(task.priority)} hover:opacity-90 transition-opacity`}
+                      >
+                        <option value="CRITICAL">CRITICAL</option>
+                        <option value="URGENT">URGENT</option>
+                        <option value="HIGH">HIGH</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="LOW">LOW</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4 text-muted-foreground">
                       {assignee?.name || 'Unassigned'}
