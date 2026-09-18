@@ -36,21 +36,79 @@ export interface Sprint {
   updatedAt: string;
 }
 
+export interface TaskSubtask {
+  id: string;
+  title: string;
+  isCompleted: boolean;
+  taskId: string;
+  createdAt: string;
+}
+
+export interface TaskComment {
+  id: string;
+  content: string;
+  taskId: string;
+  userId: string;
+  user?: any;
+  createdAt: string;
+}
+
+export interface TaskActivity {
+  id: string;
+  action: string;
+  field?: string | null;
+  oldValue?: string | null;
+  newValue?: string | null;
+  taskId: string;
+  userId?: string | null;
+  user?: any;
+  createdAt: string;
+}
+
+export interface TaskAttachment {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  taskId: string;
+  uploadedById?: string | null;
+  createdAt: string;
+}
+
 export interface Task {
   id: string;
   key: string;
   title: string;
   description: string | null;
   type: string; // STORY, BUG, TASK, EPIC
-  status: TaskStatus;
-  priority: TaskPriority;
+  status: TaskStatus | null;
+  priority: TaskPriority | null;
   storyPoints: number | null;
   projectId: string;
   sprintId: string | null;
   assigneeId: string | null;
   creatorId: string;
+  isArchived?: boolean;
+  dueDate?: string | null;
+  startDate?: string | null;
+  completedAt?: string | null;
+  completedById?: string | null;
+  acceptanceCriteria?: string | null;
+  labels?: string[];
   createdAt: string;
   updatedAt: string;
+  // Relations (populated by API)
+  project?: any;
+  sprint?: any;
+  assignee?: any;
+  creator?: any;
+  subtasks?: TaskSubtask[];
+  blockers?: Blocker[];
+  comments?: TaskComment[];
+  activities?: TaskActivity[];
+  standups?: any[];
+  attachments?: TaskAttachment[];
 }
 
 export interface Blocker {
