@@ -16,7 +16,11 @@ export const getTasks = async (req: Request, res: Response) => {
     if (sprintId) query.sprintId = String(sprintId);
     
     if (assigneeId) {
-      query.assigneeId = String(assigneeId);
+      // Return tasks where user is either the assignee OR the sub-assignee
+      query.OR = [
+        { assigneeId: String(assigneeId) },
+        { subAssigneeId: String(assigneeId) },
+      ];
     }
     
     query.isArchived = isArchived === 'true';
@@ -25,6 +29,7 @@ export const getTasks = async (req: Request, res: Response) => {
       where: query,
       include: {
         assignee: true,
+        subAssignee: true,
         project: true,
         sprint: true,
         blockers: {
@@ -54,6 +59,7 @@ export const getTaskById = async (req: Request, res: Response) => {
       where: { id },
       include: {
         assignee: true,
+        subAssignee: true,
         creator: true,
         project: true,
         sprint: true,
@@ -194,7 +200,7 @@ export const updateTask = async (req: Request, res: Response) => {
       return res.status(403).json({ error: 'Forbidden: You can only update your own assigned tasks' });
     }
 
-    const { title, description, type, status, priority, storyPoints, sprintId, assigneeId, dueDate, startDate, acceptanceCriteria, labels } = req.body;
+    const { title, description, type, status, priority, storyPoints, sprintId, assigneeId, subAssigneeId, dueDate, startDate, acceptanceCriteria, labels } = req.body;
 
     const dataToUpdate: any = {};
     if (isLeadOrAdmin) {
@@ -205,6 +211,7 @@ export const updateTask = async (req: Request, res: Response) => {
       if (storyPoints !== undefined) dataToUpdate.storyPoints = storyPoints ? parseInt(storyPoints) : null;
       if (sprintId !== undefined) dataToUpdate.sprintId = sprintId;
       if (assigneeId !== undefined) dataToUpdate.assigneeId = assigneeId;
+      if (subAssigneeId !== undefined) dataToUpdate.subAssigneeId = subAssigneeId || null;
       if (dueDate !== undefined) dataToUpdate.dueDate = dueDate ? new Date(dueDate) : null;
       if (startDate !== undefined) dataToUpdate.startDate = startDate ? new Date(startDate) : null;
     }
@@ -226,6 +233,7 @@ export const updateTask = async (req: Request, res: Response) => {
       data: dataToUpdate,
       include: {
         assignee: true,
+        subAssignee: true,
         project: true,
         sprint: true,
         blockers: {

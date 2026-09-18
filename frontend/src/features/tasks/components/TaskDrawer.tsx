@@ -83,7 +83,7 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
   const blocker = task.blockers?.find((b: any) => !b.isResolved);
 
   const isHighAuthority = user?.role === 'ADMIN' || user?.role === 'PRODUCT_MANAGER' || user?.role === 'PRODUCT_OWNER';
-  const isMyTask = user?.id === task.assigneeId;
+  const isMyTask = user?.id === task.assigneeId || user?.id === task.subAssigneeId;
   const canEditStatus = isHighAuthority || isMyTask;
   const canEditDetails = isHighAuthority;
 
@@ -438,6 +438,50 @@ export default function TaskDrawer({ taskId, onClose }: TaskDrawerProps) {
                         </select>
                       ) : (
                         <span className="text-sm font-medium">{assignee?.name || 'Unassigned'}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Sub Assignee */}
+                  <div>
+                    <span className="text-xs text-muted-foreground block mb-1.5">Sub Assignee</span>
+                    <div className="flex items-center gap-2">
+                      {task.subAssignee && (
+                        <Avatar className="w-7 h-7 border-2 shrink-0 border-violet-500/50">
+                          <AvatarImage src={task.subAssignee.avatar} />
+                          <AvatarFallback className="text-[10px] bg-violet-500/10 text-violet-600">
+                            {task.subAssignee.name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      {canEditDetails ? (
+                        <select
+                          className="w-full text-xs border rounded-md px-2.5 py-1.5 bg-background font-medium focus:ring-2 focus:ring-violet-500 outline-none cursor-pointer"
+                          value={task.subAssigneeId || ''}
+                          onChange={(e) => {
+                            const newId = e.target.value || null;
+                            updateTask.mutate({ id: task.id, subAssigneeId: newId }, {
+                              onSuccess: () => {
+                                const m = availableMembers.find((m: any) => m.id === newId);
+                                toast({
+                                  title: 'Sub Assignee Updated',
+                                  description: m ? `Sub-assigned to ${m.name}` : 'Sub Assignee removed'
+                                });
+                              }
+                            });
+                          }}
+                        >
+                          <option value="">None</option>
+                          {assignableMembers.map((m: any) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name} ({(m.role || '').replace(/_/g, ' ')})
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-sm font-medium">
+                          {task.subAssignee?.name || <span className="text-muted-foreground italic text-xs">None</span>}
+                        </span>
                       )}
                     </div>
                   </div>

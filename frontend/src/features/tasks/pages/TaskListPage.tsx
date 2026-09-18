@@ -49,8 +49,8 @@ export default function TaskListPage() {
 
   const visibleTasks = useMemo(() => {
     const filtered = tasks.filter((t: any) => {
-      // Role permission check
-      if (!isPM && t.assigneeId !== user?.id && t.assignee?.id !== user?.id) return false;
+      // Role permission check — show tasks assigned or sub-assigned to this user
+      if (!isPM && t.assigneeId !== user?.id && t.assignee?.id !== user?.id && t.subAssigneeId !== user?.id && t.subAssignee?.id !== user?.id) return false;
 
       // Search query
       if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t.key.toLowerCase().includes(search.toLowerCase())) return false;

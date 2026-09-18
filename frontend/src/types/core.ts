@@ -88,6 +88,7 @@ export interface Task {
   projectId: string;
   sprintId: string | null;
   assigneeId: string | null;
+  subAssigneeId?: string | null;
   creatorId: string;
   isArchived?: boolean;
   dueDate?: string | null;
@@ -102,6 +103,7 @@ export interface Task {
   project?: any;
   sprint?: any;
   assignee?: any;
+  subAssignee?: any;
   creator?: any;
   subtasks?: TaskSubtask[];
   blockers?: Blocker[];
